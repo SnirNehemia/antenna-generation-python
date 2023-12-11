@@ -16,7 +16,7 @@ import ezdxf.addons.geo
 import ezdxf
 np.random.seed(1)
 
-a=4
+a=5
 
 def rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=0):
     # create a rectangle and returns it. if it is out of bounds it returns 0
