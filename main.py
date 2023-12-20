@@ -14,9 +14,7 @@ import os
 from shapely.geometry import mapping
 import ezdxf.addons.geo
 import ezdxf
-np.random.seed(1)
-
-a=5
+np.random.seed(2)
 
 def rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=0):
     # create a rectangle and returns it. if it is out of bounds it returns 0
@@ -43,13 +41,13 @@ def rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_boo
 #     print('starting run...')
 
 # define the constant parameters:
-rect_amount = 10
+rect_amount = 20
 # add rect properties - center and size
 sub_amount = 10
 sub_size = [[3, 20], [0.5, 1.5]]
 bounds = [(-100, 100), (-100, 100)]
 max_poly_num = 5  # maximum amount of merged polygons
-discrete_angle = 30  # discrete angle of rectangles
+discrete_angle = 45  # discrete angle of rectangles
 
 # define bounding polygon in format of [(x),(y)], for now it's a simple rectangle
 
@@ -79,21 +77,31 @@ feed_PEC = feed_PEC - feed_poly
 ant_polys = []
 count_failed = 0
 chain_count = 0
+chain_poly_count = 0
 for i in range(rect_amount):
     if mode == 'chain' and len(ant_polys) > 0 and np.random.random() < chain_chance:
         poly = 0
         while not poly:
-            center = (center + (-1)**np.random.randint(0, 2) *
-                          size / 2 * np.array([np.cos(angle), np.sin(angle)]))
+            c, s = np.cos(np.radians(angle)), np.sin(np.radians(angle))
+            R1 = np.array(((c, -s), (s, c)))
+            size1 = size
+            # center = (center + (-1)**np.random.randint(0, 2) *
+            #               size / 2 * np.array([np.cos(angle), np.sin(angle)]))
             size = np.round([np.random.uniform(10, 50), np.random.uniform(2, 10)], 1)
             angle = np.random.randint(0, int(360 / discrete_angle)) * discrete_angle
-            # center = (center + (-1) ** np.random.randint(0, 2) *
-            #           size / 2 * np.array([np.cos(angle), np.sin(angle)]))
+            c, s = np.cos(np.radians(angle)), np.sin(np.radians(angle))
+            R2 = np.array(((c, -s), (s, c)))
+            center = (center +
+                      (-1) ** np.random.randint(0, 2) * np.matmul(R1, size1) / 2 +
+                      (-1) ** np.random.randint(0, 2) * np.matmul(R2, size) / 2)
             poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
+        chain_poly_count += 1
     else:
         if mode == 'chain':
             chain_count += 1
+            print('chain finished with ' + str(chain_poly_count) + ' polygons')
             print('started a new chain #'+str(chain_count))
+            chain_poly_count = 0
         center = np.round(np.random.uniform(-100, 100, 2), 1)
         size = np.round([np.random.uniform(10, 50), np.random.uniform(2, 10)], 1)
         angle = np.random.randint(0, int(360/discrete_angle))*discrete_angle
@@ -105,6 +113,7 @@ for i in range(rect_amount):
         ant_polys.append(poly)
     else:
         count_failed += 1
+print('chain finished with ' + str(chain_poly_count) + ' polygons')
 print(str(count_failed) + ' rectangles failed')
 ants_merged = unary_union(ant_polys)  # merge the polygons
 
