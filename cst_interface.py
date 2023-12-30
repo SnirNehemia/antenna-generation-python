@@ -34,7 +34,8 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
-for run_ID in range(10):
+ants_count = 0
+for run_ID in range(10, 50):
     cst_time = time.time()
     # run_ID = 1
     if not os.path.isdir(models_path + '\\' + str(run_ID)):
@@ -63,6 +64,9 @@ for run_ID in range(10):
     file = open(file_name, 'wb')
     pickle.dump([S11, freq], file)
     file.close()
+    ants_count += 1
     print('saved results. ')
-    print(f'\t RUNTIME is:\n\t\t {run_ID:.0} ant time: {time.time()-cst_time:.1} sec \n\t\t overall time: {(time.time()-overall_sim_time)/60:.1} min')
+    print(f'\t RUNTIME is:\n\t\t ant #{run_ID:.0f} time: {time.time()-cst_time:.1f} sec \n\t\t overall time: {(time.time()-overall_sim_time)/60:.1f} min')
+    print(f'\t\t average time: {(time.time() - overall_sim_time) / ants_count: .1f} sec')
 
+print(' --------------------------------- \n \t\t\t FINISHED THE RUN \n ---------------------------------')

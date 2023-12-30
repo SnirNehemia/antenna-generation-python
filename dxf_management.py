@@ -17,7 +17,6 @@ import ezdxf
 
 from distutils.dir_util import copy_tree
 
-a=5
 
 def rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=0):
     # create a rectangle and returns it. if it is out of bounds it returns 0
@@ -45,7 +44,7 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
     # define the constant parameters:
     rect_amount = 25
     # add rect properties - center and size
-    sub_amount = 10
+    sub_amount = 1
     sub_size = [[3, 20], [0.5, 1.5]]
     bounds = [(-100, 100), (-100, 100)]
     max_poly_num = 5  # maximum amount of merged polygons
@@ -66,7 +65,7 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
     feed_angle = 0  #np.random.uniform(0, 360)
 
     mode = 'chain'
-    chain_chance = 0.7
+    chain_chance = 0.75
 
     feed_PEC = rectangle(feed_center, feed_size, feed_angle, bounds_polygon, Point([bounds[0][0], bounds[1][0]]))
     feed_poly = rectangle(feed_center, (feed_length, feed_size[1]), feed_angle, bounds_polygon, Point([bounds[0][0], bounds[1][0]]))
@@ -128,18 +127,16 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
     sub_merged = unary_union(sub_polys)  # merge the polygons
 
     ants_merged = unary_union(ants_merged - sub_merged)
-    ant_polys = list(ants_merged.geoms)
-    ant_polys.sort(key=lambda x: x.area, reverse=True)  # sort from largest to smallest
-
-    if len(ant_polys) > max_poly_num:
-        largest_ant_polys = ant_polys[0:max_poly_num]
-    else:
-        largest_ant_polys = ant_polys
-
-    ants_merged = unary_union(largest_ant_polys)
-
-    # if i want to count them
     if ants_merged.geom_type == 'MultiPolygon':
+        ant_polys = list(ants_merged.geoms)
+        ant_polys.sort(key=lambda x: x.area, reverse=True)  # sort from largest to smallest
+
+        if len(ant_polys) > max_poly_num:
+            largest_ant_polys = ant_polys[0:max_poly_num]
+        else:
+            largest_ant_polys = ant_polys
+        ants_merged = unary_union(largest_ant_polys)
+        # if i want to count them
         polygon_list = list(ants_merged.geoms)  # extract it back to a polygon list
         polygon_num = len(polygon_list)
     else:
@@ -169,12 +166,13 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
 
     f.savefig(save_dir + r'\image.png')
     f.savefig(save_pic_dir + r'\image_' + run_ID + '.png')
-    plt.close(f)
+    if not plot:
+        plt.close(f)
 
-    if not ants_merged.geom_type == 'MultiPolygon':
-        PEC_rects = MultiPolygon(ants_merged)
-    else:
-        PEC_rects = ants_merged
+    # if not ants_merged.geom_type == 'MultiPolygon':
+    #     PEC_rects = MultiPolygon(ants_merged)
+    # else:
+    PEC_rects = ants_merged
     PEC_feed = feed_PEC
     feed = feed_poly
 
@@ -215,4 +213,4 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
 
 if __name__ == '__main__':
     print('generating a DXF...')
-    CreateDXF(plot=True, seed = 1,suppress_prints=False)
+    CreateDXF(plot=True, seed=1, suppress_prints=False)
