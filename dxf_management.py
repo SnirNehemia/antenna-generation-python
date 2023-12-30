@@ -39,7 +39,7 @@ def rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_boo
             return 0
 
 
-def main(plot=False, seed=-1,run_ID=''):
+def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
     if seed > 0:
         np.random.seed(seed)
     # define the constant parameters:
@@ -66,7 +66,7 @@ def main(plot=False, seed=-1,run_ID=''):
     feed_angle = 0  #np.random.uniform(0, 360)
 
     mode = 'chain'
-    chain_chance = 0.9
+    chain_chance = 0.7
 
     feed_PEC = rectangle(feed_center, feed_size, feed_angle, bounds_polygon, Point([bounds[0][0], bounds[1][0]]))
     feed_poly = rectangle(feed_center, (feed_length, feed_size[1]), feed_angle, bounds_polygon, Point([bounds[0][0], bounds[1][0]]))
@@ -93,7 +93,8 @@ def main(plot=False, seed=-1,run_ID=''):
         else:
             if mode == 'chain':
                 chain_count += 1
-                print('started a new chain #'+str(chain_count))
+                if not suppress_prints:
+                    print('started a new chain #'+str(chain_count))
             center = np.round(np.random.uniform(-100, 100, 2), 1)
             size = np.round([np.random.uniform(10, 50), np.random.uniform(2, 10)], 1)
             angle = np.random.randint(0, int(360/discrete_angle))*discrete_angle
@@ -105,7 +106,8 @@ def main(plot=False, seed=-1,run_ID=''):
             ant_polys.append(poly)
         else:
             count_failed += 1
-    print(str(count_failed) + ' rectangles failed')
+    if not suppress_prints:
+        print(str(count_failed) + ' rectangles failed')
     ants_merged = unary_union(ant_polys)  # merge the polygons
 
     # generate sub polygons
@@ -121,7 +123,8 @@ def main(plot=False, seed=-1,run_ID=''):
             sub_polys.append(poly)
         else:
             count_failed += 1
-    print(str(count_failed) + ' rectangles failed')
+    if not suppress_prints:
+        print(str(count_failed) + ' rectangles failed')
     sub_merged = unary_union(sub_polys)  # merge the polygons
 
     ants_merged = unary_union(ants_merged - sub_merged)
@@ -157,6 +160,7 @@ def main(plot=False, seed=-1,run_ID=''):
 
     # save the model
     save_dir = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\models'
+    save_pic_dir = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\model_pictures'
     if run_ID != '':
         save_dir = save_dir + '\\'+ run_ID
     # os.getcwd() # r"C:\Users\Snir\OneDrive - Tel-Aviv University\Snir - FemtoNano Group's files\AI RF design\python tests"
@@ -164,7 +168,8 @@ def main(plot=False, seed=-1,run_ID=''):
         os.chdir(save_dir)
 
     f.savefig(save_dir + r'\image.png')
-    f.close()
+    f.savefig(save_pic_dir + r'\image_' + run_ID + '.png')
+    plt.close(f)
 
     if not ants_merged.geom_type == 'MultiPolygon':
         PEC_rects = MultiPolygon(ants_merged)
@@ -175,8 +180,8 @@ def main(plot=False, seed=-1,run_ID=''):
 
     polygon_lists = [PEC_rects, PEC_feed, feed]
     files_name_list = ['PEC_rects', 'PEC_feed', 'feed']
-
-    print('saves files to ' + os.getcwd())
+    if not suppress_prints:
+        print('saves files to ' + os.getcwd())
 
     for i, file_name in enumerate(files_name_list):
 
@@ -187,14 +192,14 @@ def main(plot=False, seed=-1,run_ID=''):
         for entity in geoproxy.to_dxf_entities(polygon=2):
             msp.add_entity(entity)
         doc.saveas(file_name + ".dxf")
-        print('saved: ' + file_name + ".dxf")
+        if not suppress_prints:
+            print('saved: ' + file_name + ".dxf")
 
     target_folder = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf'
     copy_tree(save_dir, target_folder)
-
-    print('updated dxf for file')
-
-    print('finished')
+    if not suppress_prints:
+        print('updated dxf for file')
+        print(' --- finished --- ')
 
 
     # # find which rectangles are contained to subtract them(?)
@@ -210,4 +215,4 @@ def main(plot=False, seed=-1,run_ID=''):
 
 if __name__ == '__main__':
     print('generating a DXF...')
-    CreateDXF(plot=True, seed = 1)
+    CreateDXF(plot=True, seed = 1,suppress_prints=False)

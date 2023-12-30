@@ -13,7 +13,7 @@ import numpy as np
 
 from distutils.dir_util import copy_tree
 import pickle
-
+import time
 import dxf_management
 """ open the CST project that we already created"""
 
@@ -33,32 +33,36 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 """ Generate the DXFs """
 
 # run the function that is currently called 'main' to generate the cst file
-run_ID = 1
-if not os.path.isdir(models_path + '\\' + str(run_ID)):
-    os.mkdir(models_path + '\\' + str(run_ID))
-dxf_management.main(plot=True, seed=2, run_ID=str(run_ID))
+overall_sim_time = time.time()
+for run_ID in range(10):
+    cst_time = time.time()
+    # run_ID = 1
+    if not os.path.isdir(models_path + '\\' + str(run_ID)):
+        os.mkdir(models_path + '\\' + str(run_ID))
+    dxf_management.CreateDXF(plot=False, run_ID=str(run_ID))
+    print('created DXFs... ',end='')
 
+    """ Rebuild the model and run it """
 
-""" Rebuild the model and run it """
+    project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
+    project.model3d.run_solver()
 
-project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
-project.model3d.run_solver()
+    """ access results """
+    S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
+    S11 = np.array(S_results.get_ydata())
+    freq = np.array(S_results.get_xdata())
 
-""" access results """
-S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
-S11 = np.array(S_results.get_ydata())
-freq = np.array(S_results.get_xdata())
+    # the farfield will be exported using post-proccessing methods and it should be moved to a designated location and renamed
+    print('got results... ',end='')
 
-# the farfield will be exported using post-proccessing methods and it should be moved to a designated location and renamed
-print('got results')
+    # file_name = 'Radiation_' + str(run_ID)
+    copy_tree(pattern_source_path, results_path + '\\' + str(run_ID))
+    # os.mkdir(save_path + '\\' + str(run_ID))
 
-# file_name = 'Radiation_' + str(run_ID)
-copy_tree(pattern_source_path, results_path + '\\' + str(run_ID))
-# os.mkdir(save_path + '\\' + str(run_ID))
-
-file_name = results_path + '\\' + str(run_ID) + '\\S_parameters.pickle'   # TODO: determine how it should be saved
-file = open(file_name, 'wb')
-pickle.dump([S11, freq], file)
-file.close()
-
+    file_name = results_path + '\\' + str(run_ID) + '\\S_parameters.pickle'   # TODO: determine how it should be saved
+    file = open(file_name, 'wb')
+    pickle.dump([S11, freq], file)
+    file.close()
+    print('saved results. ')
+    print(f'\t RUNTIME is:\n\t\t {run_ID:.0} ant time: {time.time()-cst_time:.1} sec \n\t\t overall time: {(time.time()-overall_sim_time)/60:.1} min')
 
