@@ -38,18 +38,23 @@ def rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_boo
             return 0
 
 
-def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
+def rot_mat(angle):
+    c = np.cos(angle * np.pi/180)
+    s = np.sin(angle * np.pi/180)
+    return np.array([[c, -s], [s, c]])
+
+def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
     if seed > 0:
         np.random.seed(seed)
     # define the constant parameters:
-    rect_amount = 25
+    rect_amount = 6
     # add rect properties - center and size
     sub_amount = 1
     sub_size = [[3, 20], [0.5, 1.5]]
     bounds = [(-100, 100), (-100, 100)]
     max_poly_num = 5  # maximum amount of merged polygons
-    discrete_angle = 30  # discrete angle of rectangles
-
+    discrete_angle = 90  # discrete angle of rectangles
+    poly_list = []
     # define bounding polygon in format of [(x),(y)], for now it's a simple rectangle
 
     bounds_polygon = Polygon([(bounds[0][0], bounds[1][0]),
@@ -65,7 +70,7 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
     feed_angle = 0  #np.random.uniform(0, 360)
 
     mode = 'chain'
-    chain_chance = 0.75
+    chain_chance = 0.8
 
     feed_PEC = rectangle(feed_center, feed_size, feed_angle, bounds_polygon, Point([bounds[0][0], bounds[1][0]]))
     feed_poly = rectangle(feed_center, (feed_length, feed_size[1]), feed_angle, bounds_polygon, Point([bounds[0][0], bounds[1][0]]))
@@ -78,17 +83,27 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
     ant_polys = []
     count_failed = 0
     chain_count = 0
+
+    centers = []
+    sizes = []
+    angles = []
+
     for i in range(rect_amount):
         if mode == 'chain' and len(ant_polys) > 0 and np.random.random() < chain_chance:
             poly = 0
             while not poly:
-                center = (center + (-1)**np.random.randint(0, 2) *
-                              size / 2 * np.array([np.cos(angle), np.sin(angle)]))
+                # center_prev = center
+                # angle_prev = angle
+                # size_prev = size
                 size = np.round([np.random.uniform(10, 50), np.random.uniform(2, 10)], 1)
                 angle = np.random.randint(0, int(360 / discrete_angle)) * discrete_angle
-                # center = (center + (-1) ** np.random.randint(0, 2) *
-                #           size / 2 * np.array([np.cos(angle), np.sin(angle)]))
+                center = (centers[-1] + 1 *
+                          np.matmul(rot_mat(angles[-1]), sizes[-1] * np.array([1, 0])) / 2 +
+                          np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
                 poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
+            # centers.append(center)
+            # sizes.append(size)
+            # angles.append(angle)
         else:
             if mode == 'chain':
                 chain_count += 1
@@ -97,16 +112,42 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
             center = np.round(np.random.uniform(-100, 100, 2), 1)
             size = np.round([np.random.uniform(10, 50), np.random.uniform(2, 10)], 1)
             angle = np.random.randint(0, int(360/discrete_angle))*discrete_angle
-            if mode == 'chain' and len(ant_polys) == 0:
-                center = (feed_center + (-1) ** np.random.randint(0, 2) *
-                          feed_size / 2 * np.array([np.cos(feed_angle), np.sin(feed_angle)]))
+            if mode == 'chain' and chain_count == 1:  # len(ant_polys) == 0
+                # center = (feed_center + (-1) *
+                #           feed_size / 2 * np.array([np.cos(feed_angle), np.sin(feed_angle)]) +
+                #           size * np.array([1,0]) / 2 * np.array([np.cos(angle), np.sin(angle)]))
+                center = (feed_center + -1 *
+                          np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 +
+                          np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
+                centers.append(center)
+                sizes.append(size)
+                angles.append(angle)
+                print(f'that is for rect1 with angle {angle:.0f} and size {size[0]:.1f}, {size[1]:.1f}:')
+                print(-1*np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 )
+                print(np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
+
+            if mode == 'chain' and chain_count == 2:
+                center = (feed_center +
+                          np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 +
+                          np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
+                centers.append(center)
+                sizes.append(size)
+                angles.append(angle)
+                print(f'that is for rect2 with angle {angle:.0f} and size {size[0]:.1f}, {size[1]:.1f}:')
+                print(np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 )
+                print(np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
             poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
+            poly_list.append([center, size, angle])
         if poly != 0:
             ant_polys.append(poly)
+            centers.append(center)
+            sizes.append(size)
+            angles.append(angle)
         else:
             count_failed += 1
     if not suppress_prints:
         print(str(count_failed) + ' rectangles failed')
+    print(poly_list)
     ants_merged = unary_union(ant_polys)  # merge the polygons
 
     # generate sub polygons
@@ -124,6 +165,7 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
             count_failed += 1
     if not suppress_prints:
         print(str(count_failed) + ' rectangles failed')
+        print('total chain amount: ' + str(chain_count) + f' with {rect_amount:.0f} polygons')
     sub_merged = unary_union(sub_polys)  # merge the polygons
 
     ants_merged = unary_union(ants_merged - sub_merged)
@@ -154,51 +196,51 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
 
     gpd.GeoSeries(sub_merged).plot(ax=ax, color='gold', alpha=0.1)
 
-
+    if save:
     # save the model
-    save_dir = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\models'
-    save_pic_dir = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\model_pictures'
-    if run_ID != '':
-        save_dir = save_dir + '\\'+ run_ID
-    # os.getcwd() # r"C:\Users\Snir\OneDrive - Tel-Aviv University\Snir - FemtoNano Group's files\AI RF design\python tests"
-    if os.path.isdir(save_dir):
-        os.chdir(save_dir)
+        save_dir = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\models'
+        save_pic_dir = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\model_pictures'
+        if run_ID != '':
+            save_dir = save_dir + '\\'+ run_ID
+        # os.getcwd() # r"C:\Users\Snir\OneDrive - Tel-Aviv University\Snir - FemtoNano Group's files\AI RF design\python tests"
+        if os.path.isdir(save_dir):
+            os.chdir(save_dir)
 
-    f.savefig(save_dir + r'\image.png')
-    f.savefig(save_pic_dir + r'\image_' + run_ID + '.png')
-    if not plot:
-        plt.close(f)
+        f.savefig(save_dir + r'\image.png')
+        f.savefig(save_pic_dir + r'\image_' + run_ID + '.png')
+        if not plot:
+            plt.close(f)
 
-    # if not ants_merged.geom_type == 'MultiPolygon':
-    #     PEC_rects = MultiPolygon(ants_merged)
-    # else:
-    PEC_rects = ants_merged
-    PEC_feed = feed_PEC
-    feed = feed_poly
+        # if not ants_merged.geom_type == 'MultiPolygon':
+        #     PEC_rects = MultiPolygon(ants_merged)
+        # else:
+        PEC_rects = ants_merged
+        PEC_feed = feed_PEC
+        feed = feed_poly
 
-    polygon_lists = [PEC_rects, PEC_feed, feed]
-    files_name_list = ['PEC_rects', 'PEC_feed', 'feed']
-    if not suppress_prints:
-        print('saves files to ' + os.getcwd())
-
-    for i, file_name in enumerate(files_name_list):
-
-        doc = ezdxf.new("AC1032")
-        geoproxy = ezdxf.addons.geo.GeoProxy.parse(mapping(polygon_lists[i]))
-        msp = doc.modelspace()
-        # Use LWPOLYLINE instead of hatch.
-        for entity in geoproxy.to_dxf_entities(polygon=2):
-            msp.add_entity(entity)
-        doc.saveas(file_name + ".dxf")
+        polygon_lists = [PEC_rects, PEC_feed, feed]
+        files_name_list = ['PEC_rects', 'PEC_feed', 'feed']
         if not suppress_prints:
-            print('saved: ' + file_name + ".dxf")
+            print('saves files to ' + os.getcwd())
 
-    target_folder = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf'
-    copy_tree(save_dir, target_folder)
-    if not suppress_prints:
-        print('updated dxf for file')
-        print(' --- finished --- ')
+        for i, file_name in enumerate(files_name_list):
 
+            doc = ezdxf.new("AC1032")
+            geoproxy = ezdxf.addons.geo.GeoProxy.parse(mapping(polygon_lists[i]))
+            msp = doc.modelspace()
+            # Use LWPOLYLINE instead of hatch.
+            for entity in geoproxy.to_dxf_entities(polygon=2):
+                msp.add_entity(entity)
+            doc.saveas(file_name + ".dxf")
+            if not suppress_prints:
+                print('saved: ' + file_name + ".dxf")
+
+        target_folder = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf'
+        copy_tree(save_dir, target_folder)
+        if not suppress_prints:
+            print('updated dxf for file')
+            print(' --- finished --- ')
+    return [centers, sizes, angles]
 
     # # find which rectangles are contained to subtract them(?)
     # PEC_rect_list = list(PEC_rects.geoms)
@@ -213,4 +255,4 @@ def CreateDXF(plot=False, seed=-1,run_ID='', suppress_prints=True):
 
 if __name__ == '__main__':
     print('generating a DXF...')
-    CreateDXF(plot=True, seed=1, suppress_prints=False)
+    [centers, sizes, angles] = CreateDXF(plot=True, seed=1, suppress_prints=False, save=False)
