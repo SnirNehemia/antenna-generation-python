@@ -46,15 +46,24 @@ def rot_mat(angle):
 def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
     if seed > 0:
         np.random.seed(seed)
+    # initializations:
+    # generate antenna polygons
+    ant_polys = []
+    poly_list = []
+    count_failed = 0
+    chain_count = 0
+    centers = []
+    sizes = []
+    angles = []
     # define the constant parameters:
-    rect_amount = 6
-    # add rect properties - center and size
-    sub_amount = 1
+    rect_amount = 50
+    sub_amount = 10
     sub_size = [[3, 20], [0.5, 1.5]]
     bounds = [(-100, 100), (-100, 100)]
     max_poly_num = 5  # maximum amount of merged polygons
-    discrete_angle = 90  # discrete angle of rectangles
-    poly_list = []
+    discrete_angle = 45  # discrete angle of rectangles
+    mode = 'chain'
+    chain_chance = 0.8
     # define bounding polygon in format of [(x),(y)], for now it's a simple rectangle
 
     bounds_polygon = Polygon([(bounds[0][0], bounds[1][0]),
@@ -69,8 +78,7 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
     feed_size = np.array([np.random.uniform(max(feed_length*3, 50), 50), 5])
     feed_angle = 0  #np.random.uniform(0, 360)
 
-    mode = 'chain'
-    chain_chance = 0.8
+    # create feed polygon:
 
     feed_PEC = rectangle(feed_center, feed_size, feed_angle, bounds_polygon, Point([bounds[0][0], bounds[1][0]]))
     feed_poly = rectangle(feed_center, (feed_length, feed_size[1]), feed_angle, bounds_polygon, Point([bounds[0][0], bounds[1][0]]))
@@ -78,15 +86,6 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
     feed_buffer = shapely.buffer(feed_poly, buffer_size)
 
     feed_PEC = feed_PEC - feed_poly
-
-    # generate antenna polygons
-    ant_polys = []
-    count_failed = 0
-    chain_count = 0
-
-    centers = []
-    sizes = []
-    angles = []
 
     for i in range(rect_amount):
         if mode == 'chain' and len(ant_polys) > 0 and np.random.random() < chain_chance:
