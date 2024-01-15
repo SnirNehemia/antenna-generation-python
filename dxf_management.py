@@ -59,11 +59,14 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
     rect_amount = 50
     sub_amount = 10
     sub_size = [[3, 20], [0.5, 1.5]]
-    bounds = [(-100, 100), (-100, 100)]
+    rect_size = [[5, 20], [0.5, 5]]
+    rect_center = [[10, 90], [10, 90]]
+    bounds = [(0, 100), (0, 100)]
     max_poly_num = 5  # maximum amount of merged polygons
     discrete_angle = 45  # discrete angle of rectangles
+
     mode = 'chain'
-    chain_chance = 0.8
+    chain_chance = 0.85
     # define bounding polygon in format of [(x),(y)], for now it's a simple rectangle
 
     bounds_polygon = Polygon([(bounds[0][0], bounds[1][0]),
@@ -73,9 +76,9 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
 
     # create feed and define "safe zone" around it
     feed_length = 1
-    buffer_size = feed_length/2
-    feed_center = np.random.uniform(-50, 50, 2)
-    feed_size = np.array([np.random.uniform(max(feed_length*3, 50), 50), 5])
+    buffer_size = feed_length * 2
+    feed_center =  np.round(np.random.uniform(20, 80, 2),1)
+    feed_size =  np.round(np.array([np.random.uniform(max(feed_length*5, 30), 10), 2]),1)
     feed_angle = 0  #np.random.uniform(0, 360)
 
     centers.append(feed_center)
@@ -98,10 +101,11 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
                 # center_prev = center
                 # angle_prev = angle
                 # size_prev = size
-                size = np.round([np.random.uniform(10, 50), np.random.uniform(2, 10)], 1)
+                size = np.round([np.random.uniform(rect_size[0][0], rect_size[0][1]),
+                                 np.random.uniform(rect_size[1][0], rect_size[1][1])], 1)
                 angle = np.random.randint(0, int(360 / discrete_angle)) * discrete_angle
                 center = (centers[-1] + 1 *
-                          np.matmul(rot_mat(angles[-1]), sizes[-1] * np.array([1, 0])) / 2 +
+                          np.matmul(rot_mat(angles[-1]), (sizes[-1] - np.array([1, 0])) * np.array([1, 0])) / 2 +
                           np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
                 poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
             # centers.append(center)
@@ -112,8 +116,10 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
                 chain_count += 1
                 if not suppress_prints:
                     print('started a new chain #'+str(chain_count))
-            center = np.round(np.random.uniform(-100, 100, 2), 1)
-            size = np.round([np.random.uniform(10, 50), np.random.uniform(2, 10)], 1)
+            center = np.round([np.random.uniform(rect_center[0][0], rect_center[0][1]),
+                             np.random.uniform(rect_center[1][0], rect_center[1][1])], 1)
+            size = np.round([np.random.uniform(rect_size[0][0], rect_size[0][1]),
+                             np.random.uniform(rect_size[1][0], rect_size[1][1])], 1)
             angle = np.random.randint(0, int(360/discrete_angle))*discrete_angle
             if mode == 'chain' and chain_count == 1:  # len(ant_polys) == 0
                 # center = (feed_center + (-1) *
@@ -125,9 +131,9 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
                 centers.append(center)
                 sizes.append(size)
                 angles.append(angle)
-                print(f'that is for rect1 with angle {angle:.0f} and size {size[0]:.1f}, {size[1]:.1f}:')
-                print(-1*np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 )
-                print(np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
+                # print(f'that is for rect1 with angle {angle:.0f} and size {size[0]:.1f}, {size[1]:.1f}:')
+                # print(-1*np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 )
+                # print(np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
 
             if mode == 'chain' and chain_count == 2:
                 center = (feed_center +
@@ -136,9 +142,9 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
                 centers.append(center)
                 sizes.append(size)
                 angles.append(angle)
-                print(f'that is for rect2 with angle {angle:.0f} and size {size[0]:.1f}, {size[1]:.1f}:')
-                print(np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 )
-                print(np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
+                # print(f'that is for rect2 with angle {angle:.0f} and size {size[0]:.1f}, {size[1]:.1f}:')
+                # print(np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 )
+                # print(np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
             poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
             poly_list.append([center, size, angle])
         if poly != 0:
@@ -150,14 +156,15 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
             count_failed += 1
     if not suppress_prints:
         print(str(count_failed) + ' rectangles failed')
-    print(poly_list)
+    # print(poly_list)
     ants_merged = unary_union(ant_polys)  # merge the polygons
 
     # generate sub polygons
     sub_polys = []
     count_failed = 0
     for i in range(sub_amount):
-        center = np.round(np.random.uniform(-100, 100, (2, 1)),1)
+        center = np.round([np.random.uniform(rect_center[0][0], rect_center[0][1]),
+                             np.random.uniform(rect_center[1][0], rect_center[1][1])], 1)
         size = np.round([np.random.uniform(sub_size[0][0], sub_size[0][1]),
                          np.random.uniform(sub_size[1][0], sub_size[1][1])], 1)
         angle = np.random.randint(0, int(360/discrete_angle))*discrete_angle

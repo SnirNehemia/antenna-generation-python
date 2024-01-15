@@ -37,7 +37,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-for run_ID in range(50, 52):
+for run_ID in range(105, 110):
     cst_time = time.time()
     # run_ID = 1
     if not os.path.isdir(models_path + '\\' + str(run_ID)):
@@ -74,6 +74,7 @@ for run_ID in range(50, 52):
     ax2.set_ylim(ymin=-np.pi, ymax=np.pi)
     ax2.set_ylabel('phase [rad]', color='C1')
     ax2.tick_params(axis='y', color='C1', labelcolor='C1')
+    plt.title('S parameters')
     plt.show()
     f.savefig(save_S11_pic_dir + r'\S_parameters_' + str(run_ID) + '.png')
     plt.close(f)
