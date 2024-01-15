@@ -14,7 +14,7 @@ import os
 from shapely.geometry import mapping
 import ezdxf.addons.geo
 import ezdxf
-
+import pickle
 from distutils.dir_util import copy_tree
 
 
@@ -72,11 +72,15 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
                               (bounds[0][0], bounds[1][1])])
 
     # create feed and define "safe zone" around it
-    feed_length = 5
+    feed_length = 1
     buffer_size = feed_length/2
     feed_center = np.random.uniform(-50, 50, 2)
     feed_size = np.array([np.random.uniform(max(feed_length*3, 50), 50), 5])
     feed_angle = 0  #np.random.uniform(0, 360)
+
+    centers.append(feed_center)
+    sizes.append(feed_size)
+    angles.append(feed_angle)
 
     # create feed polygon:
 
@@ -213,12 +217,14 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
         # if not ants_merged.geom_type == 'MultiPolygon':
         #     PEC_rects = MultiPolygon(ants_merged)
         # else:
-        PEC_rects = ants_merged
-        PEC_feed = feed_PEC
+
+        # PEC = unary_union([ants_merged,feed_PEC])
+        rect_PEC = ants_merged
+        # feed_PEC
         feed = feed_poly
 
-        polygon_lists = [PEC_rects, PEC_feed, feed]
-        files_name_list = ['PEC_rects', 'PEC_feed', 'feed']
+        polygon_lists = [rect_PEC, feed_PEC, feed]
+        files_name_list = ['layer_0_PEC', 'feed_PEC', 'feed']
         if not suppress_prints:
             print('saves files to ' + os.getcwd())
 
@@ -233,6 +239,11 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
             doc.saveas(file_name + ".dxf")
             if not suppress_prints:
                 print('saved: ' + file_name + ".dxf")
+
+        file_name = 'feed_layer_parameters.pickle'
+        file = open(file_name, 'wb')
+        pickle.dump([centers, sizes, angles], file)
+        file.close()
 
         target_folder = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf'
         copy_tree(save_dir, target_folder)
