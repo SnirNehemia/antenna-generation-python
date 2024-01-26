@@ -108,6 +108,14 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
                           np.matmul(rot_mat(angles[-1]), (sizes[-1] - np.array([1, 0])) * np.array([1, 0])) / 2 +
                           np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
                 poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
+                if not suppress_prints:
+                    if poly!=0:
+                        print(f' polygon successful')
+                    else:
+                        print(f' polygon failed')
+                    print(f' center: {center:.0f} ')
+                    print(f' size: {size:.0f} ')
+                    print(f' angle: {angle:.0f} ')
             # centers.append(center)
             # sizes.append(size)
             # angles.append(angle)
@@ -272,4 +280,7 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
 
 if __name__ == '__main__':
     print('generating a DXF...')
-    [centers, sizes, angles] = CreateDXF(plot=True, seed=1, suppress_prints=False, save=False)
+    # for i in range(100):
+    i=26
+    [centers, sizes, angles] = CreateDXF(plot=True, seed=i, suppress_prints=False, save=False)
+    print(f'\n finished with: {i:.0f} \n')

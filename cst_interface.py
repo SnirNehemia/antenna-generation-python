@@ -37,7 +37,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-for run_ID in range(105, 110):
+for run_ID in range(115, 1000):
     cst_time = time.time()
     # run_ID = 1
     if not os.path.isdir(models_path + '\\' + str(run_ID)):
@@ -47,9 +47,10 @@ for run_ID in range(105, 110):
     print('created DXFs... ',end='')
 
     """ Rebuild the model and run it """
-
     project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
+    print(' run solver... ',end='')
     project.model3d.run_solver()
+    print(' finished simulation... ', end='')
 
     """ access results """
     S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
@@ -57,7 +58,7 @@ for run_ID in range(105, 110):
     freq = np.array(S_results.get_xdata())
 
     # the farfield will be exported using post-proccessing methods and it should be moved to a designated location and renamed
-    print('got results... ',end='')
+    print(' got results... ',end='')
 
     # save the farfield
     copy_tree(pattern_source_path, results_path + '\\' + str(run_ID))
