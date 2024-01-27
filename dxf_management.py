@@ -25,6 +25,8 @@ def rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_boo
                     (center[0]+size[0]/2, center[1]+size[1]/2),
                     (center[0]-size[0]/2, center[1]+size[1]/2)])
     rect = affinity.rotate(rect, angle, origin='center')
+    if intersection_bool == -1: # debug mode
+        return rect
     if intersection_bool:
         if not rect.intersects(feed_buffer):
             rect = shapely.intersection(rect, bounds_polygon)
@@ -43,7 +45,8 @@ def rot_mat(angle):
     s = np.sin(angle * np.pi/180)
     return np.array([[c, -s], [s, c]])
 
-def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
+def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, debug_mode=False):
+    # debug mode prints the failed polygon
     if seed > 0:
         np.random.seed(seed)
     # initializations:
@@ -56,10 +59,10 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
     sizes = []
     angles = []
     # define the constant parameters:
-    rect_amount = 50
-    sub_amount = 10
+    rect_amount = 10
+    sub_amount = 1
     sub_size = [[3, 20], [0.5, 1.5]]
-    rect_size = [[5, 20], [0.5, 5]]
+    rect_size = [[10, 20], [0.5, 5]]
     rect_center = [[10, 90], [10, 90]]
     bounds = [(0, 100), (0, 100)]
     max_poly_num = 5  # maximum amount of merged polygons
@@ -67,6 +70,10 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
 
     mode = 'chain'
     chain_chance = 0.85
+    polygon_type = 0 # polygon_type = :
+                        # 0 for first chain - 1st polygon
+                        # 1 for second chain - 1st polygon
+                        # -1 for any othe polygon
     # define bounding polygon in format of [(x),(y)], for now it's a simple rectangle
 
     bounds_polygon = Polygon([(bounds[0][0], bounds[1][0]),
@@ -95,17 +102,19 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
     feed_PEC = feed_PEC - feed_poly
 
     for i in range(rect_amount):
-        if mode == 'chain' and len(ant_polys) > 0 and np.random.random() < chain_chance:
+        # if it's in 'chain' mode AND it's not the first piece AND we continue the same chain
+        if mode == 'chain' and not len(poly_list) == 0 and np.random.random() < chain_chance: # TODO: check it's fine with first chain element
             poly = 0
-            while not poly:
+            failed = 0
+            while not poly:  # as long as it didn't find a proper polygon:
                 # center_prev = center
                 # angle_prev = angle
                 # size_prev = size
                 size = np.round([np.random.uniform(rect_size[0][0], rect_size[0][1]),
                                  np.random.uniform(rect_size[1][0], rect_size[1][1])], 1)
-                angle = np.random.randint(0, int(360 / discrete_angle)) * discrete_angle
+                angle = np.random.randint(0, int(360 / discrete_angle)) * discrete_angle #(-1)**failed # so it change sign between failed attempts
                 center = (centers[-1] + 1 *
-                          np.matmul(rot_mat(angles[-1]), (sizes[-1] - np.array([1, 0])) * np.array([1, 0])) / 2 +
+                          np.matmul(rot_mat(angles[-1] ), (sizes[-1] - np.array([1, 0])) * np.array([1, 0])) / 2 +
                           np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
                 poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
                 if not suppress_prints:
@@ -113,53 +122,76 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
                         print(f' polygon successful')
                     else:
                         print(f' polygon failed')
-                    print(f' center: {center:.0f} ')
-                    print(f' size: {size:.0f} ')
-                    print(f' angle: {angle:.0f} ')
+                if debug_mode:
+                    if poly == 0:
+                        poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=-1)
+                        print(f' center: {center[0]:.0f}, {center[1]:.0f} ')
+                        print(f' size: {size[0]:.0f}, {size[1]:.0f} ')
+                        print(f' angle: {angle:.0f} ')
+
+                        f, ax = plt.subplots()
+                        gpd.GeoSeries(feed_PEC).boundary.plot(ax=ax, color='black')
+                        gpd.GeoSeries(feed_buffer).boundary.plot(ax=ax, color='red', alpha=0.5, linestyle='--')
+                        gpd.GeoSeries(feed_poly).plot(ax=ax, color='red', alpha=0.5)
+                        gpd.GeoSeries(poly).plot(ax=ax, color='blue', alpha=0.5)
+                        gpd.GeoSeries(ant_polys).plot(ax=ax, color='green', alpha=0.5)
+
+                        #a = input('press enter to continue')
+                        #plt.close(f)
+                        poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
+                if poly == 0:
+                    failed = failed + 1
+                    if failed > 10:
+                        print('failed too many times! there is a bug in dxf generation!')
+                        break
             # centers.append(center)
             # sizes.append(size)
             # angles.append(angle)
-        else:
+        else: # if we start a new chain:
             if mode == 'chain':
                 chain_count += 1
                 if not suppress_prints:
                     print('started a new chain #'+str(chain_count))
-            center = np.round([np.random.uniform(rect_center[0][0], rect_center[0][1]),
-                             np.random.uniform(rect_center[1][0], rect_center[1][1])], 1)
-            size = np.round([np.random.uniform(rect_size[0][0], rect_size[0][1]),
-                             np.random.uniform(rect_size[1][0], rect_size[1][1])], 1)
-            angle = np.random.randint(0, int(360/discrete_angle))*discrete_angle
-            if mode == 'chain' and chain_count == 1:  # len(ant_polys) == 0
-                # center = (feed_center + (-1) *
-                #           feed_size / 2 * np.array([np.cos(feed_angle), np.sin(feed_angle)]) +
-                #           size * np.array([1,0]) / 2 * np.array([np.cos(angle), np.sin(angle)]))
-                center = (feed_center + -1 *
-                          np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 +
-                          np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
-                centers.append(center)
-                sizes.append(size)
-                angles.append(angle)
-                # print(f'that is for rect1 with angle {angle:.0f} and size {size[0]:.1f}, {size[1]:.1f}:')
-                # print(-1*np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 )
-                # print(np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
+            poly = 0
+            while poly == 0: # as long as there is not yet a valid polygon:
+                # roll parameters
+                center = np.round([np.random.uniform(rect_center[0][0], rect_center[0][1]),
+                                 np.random.uniform(rect_center[1][0], rect_center[1][1])], 1)
+                size = np.round([np.random.uniform(rect_size[0][0], rect_size[0][1]),
+                                 np.random.uniform(rect_size[1][0], rect_size[1][1])], 1)
+                angle = np.random.randint(0, int(360/discrete_angle))*discrete_angle
+                if mode == 'chain' and chain_count == 1:  # if it's the first chain:
+                    center = (feed_center + -1 *
+                              np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 +
+                              np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
 
-            if mode == 'chain' and chain_count == 2:
-                center = (feed_center +
-                          np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 +
-                          np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
-                centers.append(center)
-                sizes.append(size)
-                angles.append(angle)
-                # print(f'that is for rect2 with angle {angle:.0f} and size {size[0]:.1f}, {size[1]:.1f}:')
-                # print(np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 )
-                # print(np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
-            poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
-            poly_list.append([center, size, angle])
+                if mode == 'chain' and chain_count == 2: # if it's the second chain:
+                    center = (feed_center +
+                              np.matmul(rot_mat(feed_angle), feed_size * np.array([1, 0])) / 2 +
+                              np.matmul(rot_mat(angle), size * np.array([1, 0])) / 2)
+
+                poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
+
+                if poly == 0 and debug_mode: # if it failed in one of the two edges of the feed:
+                    poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=-1)
+                    print(f' center: {center[0]:.0f}, {center[1]:.0f} ')
+                    print(f' size: {size[0]:.0f}, {size[1]:.0f} ')
+                    print(f' angle: {angle:.0f} ')
+
+                    f1, ax1 = plt.subplots()
+                    gpd.GeoSeries(feed_PEC).boundary.plot(ax=ax1, color='black')
+                    gpd.GeoSeries(feed_buffer).boundary.plot(ax=ax1, color='red', alpha=0.5, linestyle='--')
+                    gpd.GeoSeries(feed_poly).plot(ax=ax1, color='red', alpha=0.5)
+                    gpd.GeoSeries(poly).plot(ax=ax1, color='blue', alpha=0.5)
+                    gpd.GeoSeries(ant_polys).plot(ax=ax1, color='green', alpha=0.5)
+                    print(f'failed in {chain_count:.0f} chain first polygon')
+                    poly = rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=1)
         if poly != 0:
             ant_polys.append(poly)
             centers.append(center)
             sizes.append(size)
             angles.append(angle)
+            poly_list.append([center, size, angle])
         else:
             count_failed += 1
     if not suppress_prints:
@@ -280,7 +312,7 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True):
 
 if __name__ == '__main__':
     print('generating a DXF...')
-    # for i in range(100):
-    i=26
-    [centers, sizes, angles] = CreateDXF(plot=True, seed=i, suppress_prints=False, save=False)
-    print(f'\n finished with: {i:.0f} \n')
+    for i in range(10):
+    #i=0
+        [centers, sizes, angles] = CreateDXF(plot=True, seed=i, suppress_prints=False, save=False, debug_mode=True)
+        print(f'\n finished with: {i:.0f} \n')
