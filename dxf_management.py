@@ -45,12 +45,21 @@ def rot_mat(angle):
     s = np.sin(angle * np.pi/180)
     return np.array([[c, -s], [s, c]])
 
-def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, debug_mode=False):
+def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, debug_mode=False, project_name=''):
     # debug mode prints the failed polygon
     if seed > 0:
         np.random.seed(seed)
     # initializations:
     # generate antenna polygons
+
+    width = 160
+    length = 300
+    adx = 0.8
+    arx = 0.75
+    ady = 0.8
+    ary = 0.8
+    bounds = [(0, width*adx*arx), (0, length*ady*ary)]
+
     ant_polys = []
     poly_list = []
     count_failed = 0
@@ -59,12 +68,11 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     sizes = []
     angles = []
     # define the constant parameters:
-    rect_amount = 10
-    sub_amount = 1
+    rect_amount = 50
+    sub_amount = 10
     sub_size = [[3, 20], [0.5, 1.5]]
     rect_size = [[10, 20], [0.5, 5]]
-    rect_center = [[10, 90], [10, 90]]
-    bounds = [(0, 100), (0, 100)]
+    rect_center = [[bounds[0][1]*0.1, bounds[0][1]*0.9], [bounds[1][1]*0.1, bounds[1][1]*0.9]]
     max_poly_num = 5  # maximum amount of merged polygons
     discrete_angle = 45  # discrete angle of rectangles
 
@@ -247,9 +255,9 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     gpd.GeoSeries(sub_merged).plot(ax=ax, color='gold', alpha=0.1)
 
     if save:
-    # save the model
-        save_dir = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\models'
-        save_pic_dir = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\model_pictures'
+        # save the model
+        save_dir = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+'\\output\\models'
+        save_pic_dir = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+'\\output\\model_pictures'
         if run_ID != '':
             save_dir = save_dir + '\\'+ run_ID
         # os.getcwd() # r"C:\Users\Snir\OneDrive - Tel-Aviv University\Snir - FemtoNano Group's files\AI RF design\python tests"
@@ -291,8 +299,8 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
         file = open(file_name, 'wb')
         pickle.dump([centers, sizes, angles], file)
         file.close()
-
-        target_folder = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf'
+        target_folder = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\" + project_name + "\\DXF_Model"
+        # target_folder = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\ALL_Model_1_1_layer\DXF_Model' # TODO: add some order to the saved directories!
         copy_tree(save_dir, target_folder)
         if not suppress_prints:
             print('updated dxf for file')
@@ -312,7 +320,9 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
 
 if __name__ == '__main__':
     print('generating a DXF...')
-    for i in range(10):
-    #i=0
-        [centers, sizes, angles] = CreateDXF(plot=True, seed=i, suppress_prints=False, save=False, debug_mode=True)
-        print(f'\n finished with: {i:.0f} \n')
+    # for i in range(1):
+    i=0
+        # [centers, sizes, angles] = CreateDXF(plot=True, seed=i, suppress_prints=False, save=False, debug_mode=True)
+    [centers, sizes, angles] = CreateDXF(plot=True, seed=i, suppress_prints=False, save=True, debug_mode=True,
+                                         project_name=r'phase_2\ALL_Model_1_1_layer')
+        # print(f'\n finished with: {i:.0f} \n')

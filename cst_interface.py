@@ -8,23 +8,29 @@ print('can now communicate with ' + cst.__file__) # should print '<PATH_TO_CST_A
 
 import cst.interface
 import cst.results
-
 import numpy as np
 
 from distutils.dir_util import copy_tree
+import shutil
 import pickle
 import time
 import dxf_management
 from matplotlib import pyplot as plt
 """ open the CST project that we already created"""
 
+project_name = r'phase_2\ALL_Model_1_1_layer'
+# project_name_DXF = r'phase_2\ALL_Model_1_1_layer\DXF_Model_1_1_layer'
 
-project_path = r"C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\rect_test.cst"
-results_path = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\results'
-models_path = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\models'
-pattern_source_path = (r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\rect_test'
+
+project_path = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\" +project_name + "\\CST_Model.cst"
+results_path = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+"\\output\\results"
+# dxf_directory = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name_DXF
+models_path =  "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\" +project_name+"\\output\\models"
+pattern_source_path = ("C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+"\\CST_Model" +
                   r'\Export\Farfield')
-save_S11_pic_dir = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\rect_dxf\output\S11_pictures'
+save_S11_pic_dir = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+"\\output\\S11_pictures"
+STEP_source_path = ("C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+"\\CST_Model" +
+                  r'\Model\3D')
 
 cst_instance = cst.interface.DesignEnvironment()
 project =cst.interface.DesignEnvironment.open_project(cst_instance, project_path)
@@ -37,12 +43,12 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-for run_ID in range(115, 1000):
+for run_ID in range(0, 100):
     cst_time = time.time()
     # run_ID = 1
     if not os.path.isdir(models_path + '\\' + str(run_ID)):
         os.mkdir(models_path + '\\' + str(run_ID))
-    dxf_management.CreateDXF(plot=False, run_ID=str(run_ID))
+    dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name)
 
     print('created DXFs... ',end='')
 
@@ -62,6 +68,14 @@ for run_ID in range(115, 1000):
 
     # save the farfield
     copy_tree(pattern_source_path, results_path + '\\' + str(run_ID))
+
+    # copy the STEP model
+    target_STEP_folder = models_path + '\\' + str(run_ID)
+    for filename in os.listdir(STEP_source_path):
+        if filename.endswith('.stp'):
+            shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
+        if filename.endswith('.hlg'):
+            shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
 
     # save picture of the S11
     plt.ioff()
@@ -87,8 +101,8 @@ for run_ID in range(115, 1000):
     file.close()
     ants_count += 1
     print('saved results. ')
-    print(f'\t RUNTIME is:\n\t\t ant #{run_ID:.0f} time: {time.time()-cst_time:.1f} sec \n\t\t overall time: {(time.time()-overall_sim_time)/60:.1f} min')
-    print(f'\t\t average time: {(time.time() - overall_sim_time) / ants_count: .1f} sec')
+    print(f'\t RUNTIME for #{run_ID:.0f}:\n\t\t ant #{run_ID:.0f} time: {(time.time()-cst_time)/60:.1f} min \n\t\t overall time: {(time.time()-overall_sim_time)/60/60:.2f} hours')
+    print(f'\t\t average time: {(time.time() - overall_sim_time) / ants_count/60: .1f} min')
 
 
 print(' --------------------------------- \n \t\t\t FINISHED THE RUN \n ---------------------------------')
