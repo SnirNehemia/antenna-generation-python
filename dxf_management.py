@@ -45,21 +45,31 @@ def rot_mat(angle):
     s = np.sin(angle * np.pi/180)
     return np.array([[c, -s], [s, c]])
 
-def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, debug_mode=False, project_name=''):
+def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, debug_mode=False, project_name='', local_path='', model=''):
     # debug mode prints the failed polygon
     if seed > 0:
         np.random.seed(seed)
     # initializations:
     # generate antenna polygons
+    if model==1:
+        height = 160 # coordinate along the y (green) axis
+        width = 300 # coordinate along the x (red) axis
+        adx = 0.8
+        arx = 0.75
+        ady = 0.8
+        ary = 0.8
+        bounds = [(0, width * adx * arx), (0, height * ady * ary)]
+    if model==3:
+        height = 50  # coordinate along the y (green) axis
+        width = 100  # coordinate along the x (red) axis
+        adx = 0.8
+        arx = 0.75
+        ady = 0.8
+        ary = 0.75
+        a = 0.3
+        bounds = [(0, width*a*adx*arx), (0, height*ady*ary)]
 
-    width = 160
-    length = 300
-    adx = 0.8
-    arx = 0.75
-    ady = 0.8
-    ary = 0.8
-    bounds = [(0, width*adx*arx), (0, length*ady*ary)]
-
+    l = np.max(bounds)
     ant_polys = []
     poly_list = []
     count_failed = 0
@@ -70,8 +80,8 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     # define the constant parameters:
     rect_amount = 50
     sub_amount = 10
-    sub_size = [[3, 20], [0.5, 1.5]]
-    rect_size = [[10, 20], [0.5, 5]]
+    sub_size = [[l/20, l/10], [0.5, 1.5]]
+    rect_size = [[l/20, l/10], [0.5, 2]]
     rect_center = [[bounds[0][1]*0.1, bounds[0][1]*0.9], [bounds[1][1]*0.1, bounds[1][1]*0.9]]
     max_poly_num = 5  # maximum amount of merged polygons
     discrete_angle = 45  # discrete angle of rectangles
@@ -91,9 +101,11 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
 
     # create feed and define "safe zone" around it
     feed_length = 1
-    buffer_size = feed_length * 2
-    feed_center =  np.round(np.random.uniform(20, 80, 2),1)
-    feed_size =  np.round(np.array([np.random.uniform(max(feed_length*5, 30), 10), 2]),1)
+    buffer_size = feed_length * 1
+    # feed_center =  np.round(np.random.uniform(20, 80, 2),1)
+    feed_center = np.round(np.random.uniform(np.array([bounds[0][1], bounds[1][1]])*0.2,
+                                             np.array([bounds[0][1], bounds[1][1]])*0.8),1)
+    feed_size =  np.round(np.array([np.random.uniform(max(feed_length*5, l/5), l/5), 2]),1)
     feed_angle = 0  #np.random.uniform(0, 360)
 
     centers.append(feed_center)
@@ -256,8 +268,8 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
 
     if save:
         # save the model
-        save_dir = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+'\\output\\models'
-        save_pic_dir = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+'\\output\\model_pictures'
+        save_dir = local_path + project_name+'\\output\\models'
+        save_pic_dir = local_path + project_name+'\\output\\model_pictures'
         if run_ID != '':
             save_dir = save_dir + '\\'+ run_ID
         # os.getcwd() # r"C:\Users\Snir\OneDrive - Tel-Aviv University\Snir - FemtoNano Group's files\AI RF design\python tests"
@@ -299,7 +311,7 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
         file = open(file_name, 'wb')
         pickle.dump([centers, sizes, angles], file)
         file.close()
-        target_folder = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\" + project_name + "\\DXF_Model"
+        target_folder = local_path + project_name + "\\DXF_Model"
         # target_folder = r'C:\Users\shg\OneDrive - Tel-Aviv University\Documents\CST_projects\phase_2\ALL_Model_1_1_layer\DXF_Model' # TODO: add some order to the saved directories!
         copy_tree(save_dir, target_folder)
         if not suppress_prints:
@@ -321,8 +333,12 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
 if __name__ == '__main__':
     print('generating a DXF...')
     # for i in range(1):
-    i=0
+    # project_name = r'TEMPLATE\ALL_Model_1_1_layer'
+    # project_name = r'phase_2\test_performance'
+    i=1
+    project_name = r'Model3'
+    local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
         # [centers, sizes, angles] = CreateDXF(plot=True, seed=i, suppress_prints=False, save=False, debug_mode=True)
     [centers, sizes, angles] = CreateDXF(plot=True, seed=i, suppress_prints=False, save=True, debug_mode=True,
-                                         project_name=r'phase_2\ALL_Model_1_1_layer')
+                                         project_name=project_name, model=3,local_path=local_path)
         # print(f'\n finished with: {i:.0f} \n')

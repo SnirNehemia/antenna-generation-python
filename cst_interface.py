@@ -18,18 +18,23 @@ import dxf_management
 from matplotlib import pyplot as plt
 """ open the CST project that we already created"""
 
-project_name = r'phase_2\ALL_Model_1_1_layer'
+# project_name = r'phase_2\ALL_Model_1_1_layer'
 # project_name_DXF = r'phase_2\ALL_Model_1_1_layer\DXF_Model_1_1_layer'
+# # local_path = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"
+# project_name = r'test_performance_local'
+# local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 
+project_name = r'Model3'
+local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 
-project_path = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\" +project_name + "\\CST_Model.cst"
-results_path = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+"\\output\\results"
+project_path = local_path +project_name + "\\CST_Model.cst"
+results_path = local_path+project_name+"\\output\\results"
 # dxf_directory = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name_DXF
-models_path =  "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\" +project_name+"\\output\\models"
-pattern_source_path = ("C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+"\\CST_Model" +
+models_path =  local_path +project_name+"\\output\\models"
+pattern_source_path = (local_path+project_name+"\\CST_Model" +
                   r'\Export\Farfield')
-save_S11_pic_dir = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+"\\output\\S11_pictures"
-STEP_source_path = ("C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name+"\\CST_Model" +
+save_S11_pic_dir = local_path+project_name+"\\output\\S11_pictures"
+STEP_source_path = (local_path+project_name+"\\CST_Model" +
                   r'\Model\3D')
 
 cst_instance = cst.interface.DesignEnvironment()
@@ -43,12 +48,12 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-for run_ID in range(0, 100):
+for run_ID in range(0, 10000):
     cst_time = time.time()
     # run_ID = 1
     if not os.path.isdir(models_path + '\\' + str(run_ID)):
         os.mkdir(models_path + '\\' + str(run_ID))
-    dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name)
+    dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=3)
 
     print('created DXFs... ',end='')
 
@@ -62,7 +67,13 @@ for run_ID in range(0, 100):
     S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
     S11 = np.array(S_results.get_ydata())
     freq = np.array(S_results.get_xdata())
-
+    print(' got S11, ', end='')
+    radiation_efficiency_results = results.get_3d().get_result_item(r"1D Results\Efficiencies\Rad. Efficiency [1]")
+    radiation_efficiency = np.array(radiation_efficiency_results.get_ydata())
+    freq_efficiency = np.array(radiation_efficiency_results.get_xdata())
+    total_efficiency_results = results.get_3d().get_result_item(r"1D Results\Efficiencies\Tot. Efficiency [1]")
+    total_efficiency = np.array(radiation_efficiency_results.get_ydata())
+    print(' got efficiencies, ', end='')
     # the farfield will be exported using post-proccessing methods and it should be moved to a designated location and renamed
     print(' got results... ',end='')
 
@@ -95,10 +106,16 @@ for run_ID in range(0, 100):
     plt.close(f)
 
     # save the S parameters data
-    file_name = results_path + '\\' + str(run_ID) + '\\S_parameters.pickle'   # TODO: determine how it should be saved
+    file_name = results_path + '\\' + str(run_ID) + '\\S_parameters.pickle'
     file = open(file_name, 'wb')
     pickle.dump([S11, freq], file)
     file.close()
+    # save the efficiencies data
+    file_name = results_path + '\\' + str(run_ID) + '\\Efficiency.pickle'
+    file = open(file_name, 'wb')
+    pickle.dump([total_efficiency, radiation_efficiency, freq_efficiency], file)
+    file.close()
+
     ants_count += 1
     print('saved results. ')
     print(f'\t RUNTIME for #{run_ID:.0f}:\n\t\t ant #{run_ID:.0f} time: {(time.time()-cst_time)/60:.1f} min \n\t\t overall time: {(time.time()-overall_sim_time)/60/60:.2f} hours')
