@@ -24,7 +24,7 @@ from matplotlib import pyplot as plt
 # project_name = r'test_performance_local'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 
-project_name = r'Model3'
+project_name = r'Model3Again'
 local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 
 project_path = local_path +project_name + "\\CST_Model.cst"
@@ -48,21 +48,41 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-for run_ID in range(0, 10000):
-    cst_time = time.time()
-    # run_ID = 1
-    if not os.path.isdir(models_path + '\\' + str(run_ID)):
-        os.mkdir(models_path + '\\' + str(run_ID))
-    dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=3)
+for run_ID in range(1183, 10000):
+    succeed = 0
+    repeat_count = 0
+    while not succeed:
+        try:
+            cst_time = time.time()
+            if not os.path.isdir(models_path + '\\' + str(run_ID)):
+                os.mkdir(models_path + '\\' + str(run_ID))
+            dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=3)
 
-    print('created DXFs... ',end='')
+            print('created DXFs... ',end='')
 
-    """ Rebuild the model and run it """
-    project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
-    print(' run solver... ',end='')
-    project.model3d.run_solver()
-    print(' finished simulation... ', end='')
+            target_SPI_folder = local_path +project_name + "\\CST_Model\\Result"
+            for filename in os.listdir(target_SPI_folder):
+                if filename.endswith('.spi'):
+                    os.remove(local_path +project_name + "\\CST_Model\\Result\\" + filename)
+            print('deleted SPI... ', end='')
 
+            """ Rebuild the model and run it """
+            project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
+            print(' run solver... ',end='')
+            project.model3d.run_solver()
+            print(' finished simulation... ', end='')
+            succeed = 1
+        except Exception as error:
+            # handle the exception
+            print("An exception occurred:", error) # An exception occurred: division by zero
+            repeat_count += 1
+
+            print(f"\n\n ------------- FAILED IN #{run_ID:.0f} ------------\n")
+            time.sleep(120)  # wait for 2 minutes, for the case of temporary license error
+            if repeat_count == 4:
+                time.sleep(1200)  # wait for 20 minutes, for the case of temporary license error
+            if repeat_count > 5:
+                input('PRESS ENTER TO CONTINUE ----> ERROR ALERT')
     """ access results """
     S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
     S11 = np.array(S_results.get_ydata())
@@ -120,6 +140,7 @@ for run_ID in range(0, 10000):
     print('saved results. ')
     print(f'\t RUNTIME for #{run_ID:.0f}:\n\t\t ant #{run_ID:.0f} time: {(time.time()-cst_time)/60:.1f} min \n\t\t overall time: {(time.time()-overall_sim_time)/60/60:.2f} hours')
     print(f'\t\t average time: {(time.time() - overall_sim_time) / ants_count/60: .1f} min')
+
 
 
 print(' --------------------------------- \n \t\t\t FINISHED THE RUN \n ---------------------------------')

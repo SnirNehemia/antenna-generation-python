@@ -62,12 +62,12 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     if model==3:
         height = 50  # coordinate along the y (green) axis
         width = 100  # coordinate along the x (red) axis
-        adx = 0.8
-        arx = 0.75
-        ady = 0.8
-        ary = 0.75
-        a = 0.3
-        bounds = [(0, width*a*adx*arx), (0, height*ady*ary)]
+        adx = 0.9
+        arx = 0.9
+        adz = 0.85
+        arz = 0.85
+        a = 0.6
+        bounds = [(0, width*a*adx*arx), (0, height*adz*arz)]
 
     l = np.max(bounds)
     ant_polys = []
@@ -78,7 +78,7 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     sizes = []
     angles = []
     # define the constant parameters:
-    rect_amount = 50
+    rect_amount = 75
     sub_amount = 10
     sub_size = [[l/20, l/10], [0.5, 1.5]]
     rect_size = [[l/20, l/10], [0.5, 2]]
@@ -87,7 +87,7 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     discrete_angle = 45  # discrete angle of rectangles
 
     mode = 'chain'
-    chain_chance = 0.85
+    chain_chance = 0.9
     polygon_type = 0 # polygon_type = :
                         # 0 for first chain - 1st polygon
                         # 1 for second chain - 1st polygon
@@ -105,7 +105,7 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     # feed_center =  np.round(np.random.uniform(20, 80, 2),1)
     feed_center = np.round(np.random.uniform(np.array([bounds[0][1], bounds[1][1]])*0.2,
                                              np.array([bounds[0][1], bounds[1][1]])*0.8),1)
-    feed_size =  np.round(np.array([np.random.uniform(max(feed_length*5, l/5), l/5), 2]),1)
+    feed_size =  np.round(np.array([np.random.uniform(max(feed_length*5, l/5), l/5), 1]),1)
     feed_angle = 0  #np.random.uniform(0, 360)
 
     centers.append(feed_center)
