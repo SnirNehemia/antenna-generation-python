@@ -106,7 +106,31 @@ for run_ID in range(2710, 10000):
     # save the farfield
     copy_tree(pattern_source_path, results_path + '\\' + str(run_ID))
 
-    # copy the STEP model
+    # save and copy the STEP model:
+    # save:
+    for file_name in file_names:
+        VBA_code = r'''Sub Main
+        SelectTreeItem("Components'''+'\\'+file_name+r'''")
+            Dim path As String
+            Path = "./'''+file_name+'''_STEP.stp"
+            With STEP
+                .Reset
+                .FileName(path)
+                .WriteSelectedSolids
+            End With
+        End Sub'''
+        project.schematic.execute_vba_code(VBA_code)
+    VBA_code = r'''Sub Main
+        Dim path As String
+        Path = "./Whole_Model_STEP.stp"
+        With STEP
+            .Reset
+            .FileName(path)
+            .WriteAll
+        End With
+    End Sub'''
+    project.schematic.execute_vba_code(VBA_code)
+    # now copy:
     target_STEP_folder = models_path + '\\' + str(run_ID)
     for filename in os.listdir(STEP_source_path):
         if filename.endswith('.stp'):
