@@ -37,8 +37,11 @@ save_S11_pic_dir = local_path+project_name+"\\output\\S11_pictures"
 STEP_source_path = (local_path+project_name+"\\CST_Model" +
                   r'\Model\3D')
 
+file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
+              'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
+
 cst_instance = cst.interface.DesignEnvironment()
-project =cst.interface.DesignEnvironment.open_project(cst_instance, project_path)
+project = cst.interface.DesignEnvironment.open_project(cst_instance, project_path)
 
 results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
@@ -48,7 +51,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-for run_ID in range(1183, 10000):
+for run_ID in range(2710, 10000):
     succeed = 0
     repeat_count = 0
     while not succeed:
@@ -78,10 +81,13 @@ for run_ID in range(1183, 10000):
             repeat_count += 1
 
             print(f"\n\n ------------- FAILED IN #{run_ID:.0f} ------------\n")
+            input('Wait')
             time.sleep(120)  # wait for 2 minutes, for the case of temporary license error
-            if repeat_count == 4:
+            if repeat_count == 8:
+                dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name,
+                                         local_path=local_path, model=3)
                 time.sleep(1200)  # wait for 20 minutes, for the case of temporary license error
-            if repeat_count > 5:
+            if repeat_count == 10:
                 input('PRESS ENTER TO CONTINUE ----> ERROR ALERT')
     """ access results """
     S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
