@@ -5,6 +5,7 @@ import cst
 import shutil
 import cst.interface
 import cst.results
+import time
 
 project_file = r'C:\Users\shg\Documents\CST_projects\STEP_correction\CST_STEP_correction.cst'
 project_path = r'C:\Users\shg\Documents\CST_projects\STEP_correction'
@@ -19,7 +20,8 @@ cst_instance = cst.interface.DesignEnvironment()
 project = cst.interface.DesignEnvironment.open_project(cst_instance, project_file)
 
 # run_ID = 3234
-for run_ID in range(3234):
+for run_ID in range(555,3234):
+    print('starting ' + str(run_ID) + '...',end='')
     # step 1: copy the step file
     target_STEP_folder = STEP_origin_path + '\\' + str(run_ID)
     shutil.copy(target_STEP_folder + '\\' + STEP_origin_name + '.stp', project_path)
@@ -42,7 +44,11 @@ for run_ID in range(3234):
                 .WriteSelectedSolids
             End With
         End Sub'''
-        project.schematic.execute_vba_code(VBA_code)
+        try:
+            project.schematic.execute_vba_code(VBA_code)
+        except:
+            time.sleep(5)
+            project.schematic.execute_vba_code(VBA_code)
     VBA_code = r'''Sub Main
         Dim path As String
         Path = "./Whole_Model_STEP.stp"
@@ -67,5 +73,5 @@ for run_ID in range(3234):
     file_name = 'Whole_Model'
     shutil.copy(STEP_modified_path + '\\' + file_name + '_STEP.stp', target_STEP_folder)
     shutil.copy(STEP_modified_path + '\\' + file_name + '_STEP.hlg', target_STEP_folder)
-
+    print('finished ' + str(run_ID))
 
