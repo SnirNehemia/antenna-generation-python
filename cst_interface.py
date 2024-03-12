@@ -45,13 +45,23 @@ project = cst.interface.DesignEnvironment.open_project(cst_instance, project_pat
 
 results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
+model_parameters = {
+    'type': 3,
+    'height': 50,  # coordinate along the y (green) axis
+    'width': 100,  # coordinate along the x (red) axis
+    'adx': 0.9,
+    'arx': 0.9,
+    'adz': 0.85,
+    'arz': 0.85,
+    'a': 0.6
+}
 
 """ Generate the DXFs """
 
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-for run_ID in range(3331, 15000):
+for run_ID in range(8225, 10000):
     succeed = 0
     repeat_count = 0
     while not succeed:
@@ -82,12 +92,13 @@ for run_ID in range(3331, 15000):
 
             print(f"\n\n ------------- FAILED IN #{run_ID:.0f} ------------\n")
             input('Wait')
-            time.sleep(120)  # wait for 2 minutes, for the case of temporary license error
-            if repeat_count == 8:
+            time.sleep(300)  # wait for 2 minutes, for the case of temporary license error
+            if repeat_count > 3:
                 dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name,
                                          local_path=local_path, model=3)
-                time.sleep(1200)  # wait for 20 minutes, for the case of temporary license error
-            if repeat_count == 10:
+                project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
+                time.sleep(600)  # wait for 20 minutes, for the case of temporary license error
+            if repeat_count == 6:
                 input('PRESS ENTER TO CONTINUE ----> ERROR ALERT')
     """ access results """
     S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")

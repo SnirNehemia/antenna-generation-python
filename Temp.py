@@ -51,7 +51,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-for run_ID in range(3312, 15000):
+for run_ID in range(3987, 3989):
     succeed = 0
     repeat_count = 0
     while not succeed:

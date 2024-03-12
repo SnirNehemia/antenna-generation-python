@@ -18,6 +18,15 @@ import pickle
 from distutils.dir_util import copy_tree
 
 
+def plot_DXF(file_name):
+    doc = ezdxf.readfile(file_name)
+    fig = plt.figure()
+    ax = fig.add_axes([0, 0, 1, 1])
+    ctx = RenderContext(doc)
+    out = MatplotlibBackend(ax)
+    Frontend(ctx, out).draw_layout(doc.modelspace(), finalize=True)
+
+
 def rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_bool=0):
     # create a rectangle and returns it. if it is out of bounds it returns 0
     rect = Polygon([(center[0]-size[0]/2, center[1]-size[1]/2),
@@ -30,6 +39,8 @@ def rectangle(center, size, angle, bounds_polygon, feed_buffer, intersection_boo
     if intersection_bool:
         if not rect.intersects(feed_buffer):
             rect = shapely.intersection(rect, bounds_polygon)
+            if rect.area <= 1e-6:   # check if this polygon had area i.e. not 1d line
+                return 0
             return rect
         else:
             return 0
