@@ -37,6 +37,8 @@ save_S11_pic_dir = local_path+project_name+"\\output\\S11_pictures"
 STEP_source_path = (local_path+project_name+"\\CST_Model" +
                   r'\Model\3D')
 
+original_models_path = r'D:\model_3_data\output'
+
 file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
               'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
 
@@ -45,15 +47,52 @@ project = cst.interface.DesignEnvironment.open_project(cst_instance, project_pat
 
 results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
+# model_parameters = {
+#     'type': 1,
+#     'height': 160, # coordinate along the y (green) axis
+#     'width': 300, # coordinate along the x (red) axis
+#     'adx': 0.8,
+#     'arx': 0.75,
+#     'ady': 0.8,
+#     'ary': 0.8
+# }
+
 model_parameters = {
     'type': 3,
-    'height': 50,  # coordinate along the y (green) axis
+    'plane': 'xz',
+    # parameters that change both the antenna and the enviroment
+    'length': 50,  # coordinate along the v (green) axis
     'width': 100,  # coordinate along the x (red) axis
     'adx': 0.9,
     'arx': 0.9,
     'adz': 0.85,
     'arz': 0.85,
-    'a': 0.6
+    'a': 0.6,
+    # parameters that change only the enviroment in a plane=xz configuration
+    'thickness': 1,
+    'height': 15,
+    'ady': 0.9,
+    'ary': 0.1,
+    'b': 0.8,
+    'c': 0.8,
+    'bdx': 0.2,
+    'brx': 1,
+    'bdy': 0.8,
+    'bry': 0.75,
+    'bdz': 0.8,
+    'brz': 0.75,
+    'cdx': 1,
+    'crx': 0.3,
+    'cdy': 0.8,
+    'cry': 0.75,
+    'cdz': 0.8,
+    'crz': 0.75,
+    'ddx': 1,
+    'drx': 1,
+    'ddy': 0.8,
+    'dry': 0.75,
+    'ddz': 1,
+    'drz': 1
 }
 
 """ Generate the DXFs """
@@ -61,7 +100,9 @@ model_parameters = {
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-for run_ID in range(8225, 10000):
+starting_index = 10000
+for run_ID_local in range(2351 , 2500):
+    run_ID = starting_index + run_ID_local
     succeed = 0
     repeat_count = 0
     while not succeed:
@@ -69,15 +110,26 @@ for run_ID in range(8225, 10000):
             cst_time = time.time()
             if not os.path.isdir(models_path + '\\' + str(run_ID)):
                 os.mkdir(models_path + '\\' + str(run_ID))
-            dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=3)
-
+            # for new models
+            # dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=model_parameters)
+            # for existing models
+            original_model_path = original_models_path + '\\models\\' + str(run_ID_local)
+            curr_model_path = models_path
+            for filename in os.listdir(original_model_path):
+                if filename.endswith('.dxf'):
+                    shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID))
+                    shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model')
+            shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
+                        local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
             print('created DXFs... ',end='')
-
+            # Delete files in the CST folder to prevent errors
             target_SPI_folder = local_path +project_name + "\\CST_Model\\Result"
             for filename in os.listdir(target_SPI_folder):
                 if filename.endswith('.spi'):
                     os.remove(local_path +project_name + "\\CST_Model\\Result\\" + filename)
             print('deleted SPI... ', end='')
+            for key in model_parameters:
+                if key == 'type': continue
 
             """ Rebuild the model and run it """
             project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
@@ -148,7 +200,11 @@ for run_ID in range(8225, 10000):
             shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
         if filename.endswith('.hlg'):
             shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
-
+    # save parameters of model and environment
+    file_name = models_path + '\\' + str(run_ID) + '\\model_parameters.pickle'
+    file = open(file_name, 'wb')
+    pickle.dump(model_parameters, file)
+    file.close()
     # save picture of the S11
     plt.ioff()
     f, ax1 = plt.subplots()
@@ -158,12 +214,19 @@ for run_ID in range(8225, 10000):
     ax1.tick_params(axis='y', color='C0', labelcolor='C0')
     ax2 = ax1.twinx()
     ax2.plot(freq, np.angle(S11), 'C1')
+    print(1)
     ax2.set_ylim(ymin=-np.pi, ymax=np.pi)
+    print(1)
     ax2.set_ylabel('phase [rad]', color='C1')
+    print(1)
     ax2.tick_params(axis='y', color='C1', labelcolor='C1')
+    print(1)
     plt.title('S parameters')
-    plt.show()
+    print(1)
+    plt.show(block=False)
+    print('plotted, now save in '+save_S11_pic_dir + r'\S_parameters_' + str(run_ID) + '.png')
     f.savefig(save_S11_pic_dir + r'\S_parameters_' + str(run_ID) + '.png')
+    print('saved s ')
     plt.close(f)
 
     # save the S parameters data

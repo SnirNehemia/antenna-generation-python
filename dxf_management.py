@@ -56,29 +56,28 @@ def rot_mat(angle):
     s = np.sin(angle * np.pi/180)
     return np.array([[c, -s], [s, c]])
 
-def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, debug_mode=False, project_name='', local_path='', model=''):
+def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, debug_mode=False, polygons_parameters='',
+              project_name='', local_path='', model=''):
     # debug mode prints the failed polygon
     if seed > 0:
         np.random.seed(seed)
     # initializations:
     # generate antenna polygons
-    if model==1:
-        height = 160 # coordinate along the y (green) axis
-        width = 300 # coordinate along the x (red) axis
-        adx = 0.8
-        arx = 0.75
-        ady = 0.8
-        ary = 0.8
-        bounds = [(0, width * adx * arx), (0, height * ady * ary)]
-    if model==3:
-        height = 50  # coordinate along the y (green) axis
-        width = 100  # coordinate along the x (red) axis
-        adx = 0.9
-        arx = 0.9
-        adz = 0.85
-        arz = 0.85
-        a = 0.6
-        bounds = [(0, width*a*adx*arx), (0, height*adz*arz)]
+    if model['type']==1:
+        # height = 160 # coordinate along the y (green) axis
+        # width = 300 # coordinate along the x (red) axis
+        # adx = 0.8
+        # arx = 0.75
+        # ady = 0.8
+        # ary = 0.8
+        bounds = [(0, model['width'] * model['adx'] * model['arx']), (0, model['height'] * model['ady'] * model['ary'])]
+    if model['type']==3:
+        if model['plane'] == 'xz':
+            bounds = [(0, model['width']*model['a']*model['adx']*model['arx']),
+                      (0, model['length']*model['adz']*model['arz'])]
+        if model['plane'] == 'yz':
+            bounds = [(0, model['height'] * model['ady'] * model['ary']),
+                      (0, model['length'] * model['adz'] * model['arz'])]
 
     l = np.max(bounds)
     ant_polys = []
@@ -98,7 +97,7 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     discrete_angle = 45  # discrete angle of rectangles
 
     mode = 'chain'
-    chain_chance = 0.9
+    chain_chance = 0.95
     polygon_type = 0 # polygon_type = :
                         # 0 for first chain - 1st polygon
                         # 1 for second chain - 1st polygon
@@ -347,9 +346,19 @@ if __name__ == '__main__':
     # project_name = r'TEMPLATE\ALL_Model_1_1_layer'
     # project_name = r'phase_2\test_performance'
     i=1
-    project_name = r'Model3'
+    project_name = r'Model3Again'
+    model_parameters = {
+        'type': 3,
+        'height': 50,  # coordinate along the y (green) axis
+        'width': 100,  # coordinate along the x (red) axis
+        'adx': 0.9,
+        'arx': 0.9,
+        'adz': 0.85,
+        'arz': 0.85,
+        'a': 0.6
+    }
     local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
         # [centers, sizes, angles] = CreateDXF(plot=True, seed=i, suppress_prints=False, save=False, debug_mode=True)
     [centers, sizes, angles] = CreateDXF(plot=True, seed=i, suppress_prints=False, save=True, debug_mode=True,
-                                         project_name=project_name, model=3,local_path=local_path)
+                                         project_name=project_name, model=model_parameters,local_path=local_path)
         # print(f'\n finished with: {i:.0f} \n')
