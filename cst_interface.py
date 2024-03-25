@@ -16,36 +16,17 @@ import pickle
 import time
 import dxf_management
 from matplotlib import pyplot as plt
-""" open the CST project that we already created"""
 
-# project_name = r'phase_2\ALL_Model_1_1_layer'
-# project_name_DXF = r'phase_2\ALL_Model_1_1_layer\DXF_Model_1_1_layer'
-# # local_path = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"
-# project_name = r'test_performance_local'
-# local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 
+""" define run parameters """
+# --- define local path and project name
 project_name = r'Model3Again'
 local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
-
-project_path = local_path +project_name + "\\CST_Model.cst"
-results_path = local_path+project_name+"\\output\\results"
-# dxf_directory = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name_DXF
-models_path =  local_path +project_name+"\\output\\models"
-pattern_source_path = (local_path+project_name+"\\CST_Model" +
-                  r'\Export\Farfield')
-save_S11_pic_dir = local_path+project_name+"\\output\\S11_pictures"
-STEP_source_path = (local_path+project_name+"\\CST_Model" +
-                  r'\Model\3D')
-
-original_models_path = r'D:\model_3_data\output'
-
-file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
-              'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
-
-cst_instance = cst.interface.DesignEnvironment()
-project = cst.interface.DesignEnvironment.open_project(cst_instance, project_path)
-
-results = cst.results.ProjectFile(project_path, allow_interactive=True)
+# --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
+create_new_models = 0 # 1 for creating new models, 0 to use existing ones
+original_models_path = r'D:\model_3_data\output' # path to existing models output folder
+# --- choose whether to use fix or changed environment
+change_env = 0
 
 # model_parameters = {
 #     'type': 1,
@@ -70,8 +51,8 @@ model_parameters = {
     'a': 0.6,
     # parameters that change only the enviroment in a plane=xz configuration
     'thickness': 1,
-    'height': 15,
-    'ady': 0.9,
+    'height': 50,
+    'ady': 1,
     'ary': 0.1,
     'b': 0.8,
     'c': 0.8,
@@ -95,32 +76,67 @@ model_parameters = {
     'drz': 1
 }
 
-""" Generate the DXFs """
+## --- define the parameters limits for randomization:
+model_parameters_limits = model_parameters
+for key in model_parameters_limits.keys():
+    if model_parameters_limits[key]<=1:
+        model_parameters_limits[key] = [0, 1]
+# EXAMPLE for a costum parameter
+# model_parameters_limits['adx'] = [0.2,0.8]
+model_parameters_limits['length'] = [30,100]
+model_parameters_limits['width'] = [30,100]
+model_parameters_limits['height'] = [30, 100]
+model_parameters_limits['thickness'] = 1
+
+""" create all tree folder paths """
+# --- from here on I define the paths based on the manually defined project and local path ---
+project_path = local_path +project_name + "\\CST_Model.cst"
+results_path = local_path+project_name+"\\output\\results"
+# dxf_directory = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name_DXF
+models_path =  local_path +project_name+"\\output\\models"
+pattern_source_path = (local_path+project_name+"\\CST_Model" +
+                  r'\Export\Farfield')
+save_S11_pic_dir = local_path+project_name+"\\output\\S11_pictures"
+STEP_source_path = (local_path+project_name+"\\CST_Model" +
+                  r'\Model\3D')
+# --- for export STLs
+file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
+              'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
+
+""" open the CST project that we already created """
+
+cst_instance = cst.interface.DesignEnvironment()
+project = cst.interface.DesignEnvironment.open_project(cst_instance, project_path)
+
+results = cst.results.ProjectFile(project_path, allow_interactive=True)
+
+""" run the simulations """
 
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 10000
-for run_ID_local in range(2351 , 2500):
+starting_index = 12500
+for run_ID_local in range(13627-starting_index-1 , 2500):
     run_ID = starting_index + run_ID_local
     succeed = 0
     repeat_count = 0
     while not succeed:
         try:
             cst_time = time.time()
+            # create\choose model
             if not os.path.isdir(models_path + '\\' + str(run_ID)):
                 os.mkdir(models_path + '\\' + str(run_ID))
-            # for new models
-            # dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=model_parameters)
-            # for existing models
-            original_model_path = original_models_path + '\\models\\' + str(run_ID_local)
-            curr_model_path = models_path
-            for filename in os.listdir(original_model_path):
-                if filename.endswith('.dxf'):
-                    shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID))
-                    shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model')
-            shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
-                        local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
+            if create_new_models: # for new models
+                dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=model_parameters)
+            else: # for existing models
+                original_model_path = original_models_path + '\\models\\' + str(run_ID_local)
+                curr_model_path = models_path
+                for filename in os.listdir(original_model_path):
+                    if filename.endswith('.dxf'):
+                        shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID))
+                        shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model')
+                shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
+                            local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
             print('created DXFs... ',end='')
             # Delete files in the CST folder to prevent errors
             target_SPI_folder = local_path +project_name + "\\CST_Model\\Result"
@@ -128,9 +144,17 @@ for run_ID_local in range(2351 , 2500):
                 if filename.endswith('.spi'):
                     os.remove(local_path +project_name + "\\CST_Model\\Result\\" + filename)
             print('deleted SPI... ', end='')
-            for key in model_parameters:
-                if key == 'type': continue
-
+            # Determine env parameter by adjusting model_parameters values
+            if change_env:
+                for key, value in model_parameters_limits.items():
+                    if type(value) == list:
+                        model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),2)
+                        # update the changed variables in environment and save the current run as previous
+                        print('U-'+key)
+                        VBA_code = r'''Sub Main
+                                StoreParameter("'''+key+'''", '''+model_parameters[key]+''')
+                                End Sub'''
+                        project.schematic.execute_vba_code(VBA_code)
             """ Rebuild the model and run it """
             project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
             print(' run solver... ',end='')
@@ -214,19 +238,12 @@ for run_ID_local in range(2351 , 2500):
     ax1.tick_params(axis='y', color='C0', labelcolor='C0')
     ax2 = ax1.twinx()
     ax2.plot(freq, np.angle(S11), 'C1')
-    print(1)
     ax2.set_ylim(ymin=-np.pi, ymax=np.pi)
-    print(1)
     ax2.set_ylabel('phase [rad]', color='C1')
-    print(1)
     ax2.tick_params(axis='y', color='C1', labelcolor='C1')
-    print(1)
     plt.title('S parameters')
-    print(1)
     plt.show(block=False)
-    print('plotted, now save in '+save_S11_pic_dir + r'\S_parameters_' + str(run_ID) + '.png')
     f.savefig(save_S11_pic_dir + r'\S_parameters_' + str(run_ID) + '.png')
-    print('saved s ')
     plt.close(f)
 
     # save the S parameters data
