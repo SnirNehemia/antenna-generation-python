@@ -50,37 +50,38 @@ model_parameters = {
     'arz': 0.85,
     'a': 0.6,
     # parameters that change only the enviroment in a plane=xz configuration
-    'thickness': 1,
-    'height': 50,
-    'ady': 1,
-    'ary': 0.1,
-    'b': 0.8,
-    'c': 0.8,
-    'bdx': 0.2,
-    'brx': 1,
-    'bdy': 0.8,
-    'bry': 0.75,
-    'bdz': 0.8,
-    'brz': 0.75,
-    'cdx': 1,
-    'crx': 0.3,
-    'cdy': 0.8,
-    'cry': 0.75,
-    'cdz': 0.8,
-    'crz': 0.75,
-    'ddx': 1,
-    'drx': 1,
-    'ddy': 0.8,
-    'dry': 0.75,
-    'ddz': 1,
-    'drz': 1
+    'thickness': 0,
+    'height': 15,
+    'ady': 0.85,
+    'ary': 0.7,
+    'b': 0,
+    'c': 0,
+    'bdx': 0,
+    'brx': 0,
+    'bdy': 0,
+    'bry': 0,
+    'bdz': 0,
+    'brz': 0,
+    'cdx': 0,
+    'crx': 0,
+    'cdy': 0,
+    'cry': 0,
+    'cdz': 0,
+    'crz': 0,
+    'ddx': 0,
+    'drx': 0,
+    'ddy': 0,
+    'dry': 0,
+    'ddz': 0,
+    'drz': 0
 }
 
 ## --- define the parameters limits for randomization:
 model_parameters_limits = model_parameters
-for key in model_parameters_limits.keys():
-    if model_parameters_limits[key]<=1:
-        model_parameters_limits[key] = [0, 1]
+for key, value in model_parameters_limits.items():
+    if type(value) == int:
+        if model_parameters_limits[key]<=1:
+            model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
 model_parameters_limits['length'] = [30,100]
@@ -100,8 +101,12 @@ save_S11_pic_dir = local_path+project_name+"\\output\\S11_pictures"
 STEP_source_path = (local_path+project_name+"\\CST_Model" +
                   r'\Model\3D')
 # --- for export STLs
+# file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
+#               'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
+
 file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
-              'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
+              'Env_FR4', 'Env_Vacuum']
+
 
 """ open the CST project that we already created """
 
@@ -115,8 +120,8 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 12500
-for run_ID_local in range(13627-starting_index-1 , 2500):
+starting_index = 20000
+for run_ID_local in range( 20000-starting_index, 2500):#15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     succeed = 0
     repeat_count = 0
@@ -185,7 +190,7 @@ for run_ID_local in range(13627-starting_index-1 , 2500):
     radiation_efficiency = np.array(radiation_efficiency_results.get_ydata())
     freq_efficiency = np.array(radiation_efficiency_results.get_xdata())
     total_efficiency_results = results.get_3d().get_result_item(r"1D Results\Efficiencies\Tot. Efficiency [1]")
-    total_efficiency = np.array(radiation_efficiency_results.get_ydata())
+    total_efficiency = np.array(total_efficiency_results.get_ydata())
     print(' got efficiencies, ', end='')
     # the farfield will be exported using post-proccessing methods and it should be moved to a designated location and renamed
     print(' got results... ',end='')

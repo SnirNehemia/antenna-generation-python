@@ -78,6 +78,9 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
         if model['plane'] == 'yz':
             bounds = [(0, model['height'] * model['ady'] * model['ary']),
                       (0, model['length'] * model['adz'] * model['arz'])]
+        if model['plane'] == 'yz-flipped':
+            bounds = [(0, model['length'] * model['adz'] * model['arz']),
+                      (0, model['height'] * model['ady'] * model['ary'])]
 
     l = np.max(bounds)
     ant_polys = []
