@@ -123,7 +123,7 @@ overall_sim_time = time.time()
 ants_count = 0
 starting_index = 50000
 threshold_ID = 10000
-starting_index_offset = 0
+starting_index_offset = 1
 
 good_ants_file = original_models_path + '\\good_ants_ID-9.pickle'
 file = open(good_ants_file, 'rb')
@@ -131,10 +131,9 @@ good_ants_file_list = pickle.load(file)
 file.close()
 
 while starting_index_offset <= 100:
-
-    for ID_num in range(0, 100):#15001-starting_index-1 % 15067 is problematic!
+    for ID_num in range(0, 99):#15001-starting_index-1 % 15067 is problematic!
         ID_good = good_ants_file_list[ID_num]
-        run_ID = starting_index + ID_good + starting_index_offset
+        run_ID = starting_index + ID_num + starting_index_offset*100
         succeed = 0
         repeat_count = 0
 
