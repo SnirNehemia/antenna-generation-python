@@ -1,6 +1,7 @@
 import os
 import sys
-sys.path.append(r"C:\Program Files\Dassault Systemes\B426CSTEmagConnector\CSTStudio\AMD64\python_cst_libraries")
+# sys.path.append(r"C:\Program Files\Dassault Systemes\B426CSTEmagConnector\CSTStudio\AMD64\python_cst_libraries")
+sys.path.append(r"C:\Program Files (x86)\CST Studio Suite 2024\AMD64\python_cst_libraries")
 import cst
 print('can now communicate with ' + cst.__file__) # should print '<PATH_TO_CST_AMD64>\python_cst_libraries\cst\__init__.py'
 # documentation is at "https://space.mit.edu/RADIO/CST_online/Python/main.html"
@@ -20,13 +21,15 @@ from matplotlib import pyplot as plt
 
 """ define run parameters """
 # --- define local path and project name
-project_name = r'Model3Again'
-local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
+# project_name = r'Model3Again'
+project_name = r'Model3_100X100'
+# local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
+local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
-create_new_models = 0 # 1 for creating new models, 0 to use existing ones
-original_models_path = r'D:\model_3_data\output' # path to existing models output folder
+create_new_models = 1  # 1 for creating new models, 0 to use existing ones
+original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
 # --- choose whether to use fix or changed environment
-change_env = 0
+change_env = 1
 
 # model_parameters = {
 #     'type': 1,
@@ -39,54 +42,58 @@ change_env = 0
 # }
 
 model_parameters = {
-    'type': 3,
-    'plane': 'xz',
-    # parameters that change both the antenna and the enviroment
-    'length': 50,  # coordinate along the v (green) axis
-    'width': 100,  # coordinate along the x (red) axis
-    'adx': 0.9,
-    'arx': 0.9,
-    'adz': 0.85,
-    'arz': 0.85,
-    'a': 0.6,
-    # parameters that change only the enviroment in a plane=xz configuration
-    'thickness': 0,
-    'height': 15,
-    'ady': 0.85,
-    'ary': 0.7,
-    'b': 0,
-    'c': 0,
-    'bdx': 0,
-    'brx': 0,
-    'bdy': 0,
-    'bry': 0,
-    'bdz': 0,
-    'brz': 0,
-    'cdx': 0,
-    'crx': 0,
-    'cdy': 0,
-    'cry': 0,
-    'cdz': 0,
-    'crz': 0,
-    'ddx': 0,
-    'drx': 0,
-    'ddy': 0,
-    'dry': 0,
-    'ddz': 0,
-    'drz': 0
+    'type':3,
+    'plane':'yz-flipped',#changetoyz-flipped
+    #parametersthatchangeboththeantennaandtheenviroment
+    'length':60,#coordinatealongthev(green)axis
+    'width':30,#coordinatealongthex(red)axis
+    'adx':0.9,
+    'arx':0.9,
+    'adz':0.9,
+    'arz':0.9,
+    'a':0.6,
+    #parametersthatchangeonlytheenviromentinaplane=xzconfiguration
+    'thickness':1,
+    'height':50,
+    'ady':0.85,
+    'ary':0.85,
+    'b':0.8,
+    'c':0.8,
+    'bdx':1,
+    'brx':0.2,
+    'bdy':0.8,
+    'bry':0.75,
+    'bdz':0.8,
+    'brz':0.75,
+    'cdx':1,
+    'crx':0.3,
+    'cdy':0.8,
+    'cry':0.75,
+    'cdz':0.8,
+    'crz':0.75,
+    'ddx':1,
+    'drx':1,
+    'ddy':0.8,
+    'dry':0.75,
+    'ddz':1,
+    'drz':1
 }
 
 ## --- define the parameters limits for randomization:
-model_parameters_limits = model_parameters
+model_parameters_limits = model_parameters.copy()
 for key, value in model_parameters_limits.items():
     if type(value) == int:
         if model_parameters_limits[key]<=1:
             model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['length'] = [30,100]
-model_parameters_limits['width'] = [30,100]
-model_parameters_limits['height'] = [30, 100]
+model_parameters_limits['length'] = [50,70]
+model_parameters_limits['width'] = [10,40]
+model_parameters_limits['height'] = [40, 60]
+model_parameters_limits['ady'] = [0.7, 1]
+model_parameters_limits['ary'] = [0.7, 1]
+model_parameters_limits['adz'] = [0.7, 1]
+model_parameters_limits['arz'] = [0.7, 1]
 model_parameters_limits['thickness'] = 1
 
 """ create all tree folder paths """
@@ -101,11 +108,11 @@ save_S11_pic_dir = local_path+project_name+"\\output\\S11_pictures"
 STEP_source_path = (local_path+project_name+"\\CST_Model" +
                   r'\Model\3D')
 # --- for export STLs
-# file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
-#               'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
-
 file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
-              'Env_FR4', 'Env_Vacuum']
+              'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
+
+# file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
+#               'Env_FR4', 'Env_Vacuum']
 
 
 """ open the CST project that we already created """
@@ -120,9 +127,13 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 20000
-for run_ID_local in range( 20000-starting_index, 2500):#15001-starting_index-1 % 15067 is problematic!
+starting_index = 60000
+for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
+    if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
+            run_ID) + '.png'):  # os.path.isdir(models_path + '\\' + str(run_ID)):
+        print(str(run_ID) + 'ran already')
+        continue
     succeed = 0
     repeat_count = 0
     while not succeed:
@@ -131,6 +142,24 @@ for run_ID_local in range( 20000-starting_index, 2500):#15001-starting_index-1 %
             # create\choose model
             if not os.path.isdir(models_path + '\\' + str(run_ID)):
                 os.mkdir(models_path + '\\' + str(run_ID))
+            # Delete files in the CST folder to prevent errors
+            target_SPI_folder = local_path +project_name + "\\CST_Model\\Result"
+            for filename in os.listdir(target_SPI_folder):
+                if filename.endswith('.spi'):
+                    os.remove(local_path +project_name + "\\CST_Model\\Result\\" + filename)
+            print('deleted SPI... ', end='')
+            # Determine env parameter by adjusting model_parameters values
+            if change_env:
+                for key, value in model_parameters_limits.items():
+                    if type(value) == list:
+                        model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
+                        # update the changed variables in environment and save the current run as previous
+                        model_parameters[key] = np.max([model_parameters[key], 0.1])
+                        print('U-'+key)
+                        VBA_code = r'''Sub Main
+                                StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
+                                End Sub'''
+                        project.schematic.execute_vba_code(VBA_code)
             if create_new_models: # for new models
                 dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=model_parameters)
             else: # for existing models
@@ -143,23 +172,6 @@ for run_ID_local in range( 20000-starting_index, 2500):#15001-starting_index-1 %
                 shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
                             local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
             print('created DXFs... ',end='')
-            # Delete files in the CST folder to prevent errors
-            target_SPI_folder = local_path +project_name + "\\CST_Model\\Result"
-            for filename in os.listdir(target_SPI_folder):
-                if filename.endswith('.spi'):
-                    os.remove(local_path +project_name + "\\CST_Model\\Result\\" + filename)
-            print('deleted SPI... ', end='')
-            # Determine env parameter by adjusting model_parameters values
-            if change_env:
-                for key, value in model_parameters_limits.items():
-                    if type(value) == list:
-                        model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),2)
-                        # update the changed variables in environment and save the current run as previous
-                        print('U-'+key)
-                        VBA_code = r'''Sub Main
-                                StoreParameter("'''+key+'''", '''+model_parameters[key]+''')
-                                End Sub'''
-                        project.schematic.execute_vba_code(VBA_code)
             """ Rebuild the model and run it """
             project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
             print(' run solver... ',end='')
@@ -168,17 +180,25 @@ for run_ID_local in range( 20000-starting_index, 2500):#15001-starting_index-1 %
             succeed = 1
         except Exception as error:
             # handle the exception
-            print("An exception occurred:", error) # An exception occurred: division by zero
+            print("An exception occurred:", error)  # An exception occurred: division by zero
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print('\n\n',exc_type, fname, exc_tb.tb_lineno,'\n\n')
             repeat_count += 1
-
+            time.sleep(2)  # wait for 1 minutes, for the case of temporary license error
+            os.system("taskkill /im \"CST DESIGN ENVIRONMENT_AMD64.exe\"")
+            time.sleep(30)  # wait for 0.5 minutes, for the case of temporary license error
             print(f"\n\n ------------- FAILED IN #{run_ID:.0f} ------------\n")
-            input('Wait')
-            time.sleep(300)  # wait for 2 minutes, for the case of temporary license error
-            if repeat_count > 3:
+            cst_instance = cst.interface.DesignEnvironment()
+            project = cst.interface.DesignEnvironment.open_project(cst_instance, project_path)
+
+            results = cst.results.ProjectFile(project_path, allow_interactive=True)
+
+            if repeat_count > 2:
                 dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name,
                                          local_path=local_path, model=3)
                 project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
-                time.sleep(600)  # wait for 20 minutes, for the case of temporary license error
+                time.sleep(60)  # wait for 20 minutes, for the case of temporary license error
             if repeat_count == 6:
                 input('PRESS ENTER TO CONTINUE ----> ERROR ALERT')
     """ access results """
@@ -212,6 +232,17 @@ for run_ID_local in range( 20000-starting_index, 2500):#15001-starting_index-1 %
             End With
         End Sub'''
         project.schematic.execute_vba_code(VBA_code)
+        VBA_code = r'''Sub Main
+                SelectTreeItem("Components''' + '\\' + file_name + r'''")
+                    Dim path As String
+                    Path = "./''' + file_name + '''_STL.stl"
+                    With STEP
+                        .Reset
+                        .FileName(path)
+                        .WriteSelectedSolids
+                    End With
+                End Sub'''
+        project.schematic.execute_vba_code(VBA_code)
     VBA_code = r'''Sub Main
         Dim path As String
         Path = "./Whole_Model_STEP.stp"
@@ -222,10 +253,22 @@ for run_ID_local in range( 20000-starting_index, 2500):#15001-starting_index-1 %
         End With
     End Sub'''
     project.schematic.execute_vba_code(VBA_code)
+    VBA_code = r'''Sub Main
+            Dim path As String
+            Path = "./Whole_Model_STL.stl"
+            With STEP
+                .Reset
+                .FileName(path)
+                .WriteAll
+            End With
+        End Sub'''
+    project.schematic.execute_vba_code(VBA_code)
     # now copy:
     target_STEP_folder = models_path + '\\' + str(run_ID)
     for filename in os.listdir(STEP_source_path):
         if filename.endswith('.stp'):
+            shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
+        if filename.endswith('.stl'):
             shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
         if filename.endswith('.hlg'):
             shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
