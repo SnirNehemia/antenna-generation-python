@@ -25,7 +25,7 @@ project_name = r'Model3_100X100'
 local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 0 # 1 for creating new models, 0 to use existing ones
-original_models_path = r'D:\model_3_data\output' # path to existing models output folder
+original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
 # --- choose whether to use fix or changed environment
 change_env = 1
 
@@ -78,7 +78,7 @@ model_parameters = {
 }
 
 ## --- define the parameters limits for randomization:
-model_parameters_limits = model_parameters
+model_parameters_limits = model_parameters.copy()
 for key, value in model_parameters_limits.items():
     if type(value) == int:
         if model_parameters_limits[key]<=1:
@@ -123,20 +123,23 @@ overall_sim_time = time.time()
 ants_count = 0
 starting_index = 50000
 threshold_ID = 10000
-starting_index_offset = 1
+
 
 good_ants_file = original_models_path + '\\good_ants_ID-9.pickle'
 file = open(good_ants_file, 'rb')
 good_ants_file_list = pickle.load(file)
 file.close()
 
-while starting_index_offset <= 100:
-    for ID_num in range(0, 99):#15001-starting_index-1 % 15067 is problematic!
+
+for ID_num in range(0, 99):
+    for repeat_num in range(0, 99):
         ID_good = good_ants_file_list[ID_num]
-        run_ID = starting_index + ID_num + starting_index_offset*100
+        run_ID = starting_index + ID_num*100 + repeat_num
         succeed = 0
         repeat_count = 0
-
+        if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(run_ID) + '.png'): #os.path.isdir(models_path + '\\' + str(run_ID)):
+            print(str(run_ID) + 'ran already')
+            continue
         while not succeed:
             try:
                 cst_time = time.time()
@@ -144,15 +147,16 @@ while starting_index_offset <= 100:
                 if not os.path.isdir(models_path + '\\' + str(run_ID)):
                     os.mkdir(models_path + '\\' + str(run_ID))
                 # find a good antenna to run in different environment:
-                if create_new_models: # for new models
+                if create_new_models:  # for new models
                     dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=model_parameters)
-                else: # for existing models
+                else:  # for existing models
                     original_model_path = original_models_path + '\\models\\' + str(ID_good)
                     curr_model_path = models_path
+                    # copy each dxf file for reconstraction
                     for filename in os.listdir(original_model_path):
                         if filename.endswith('.dxf'):
-                            shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID))
-                            shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model')
+                            shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID) + '\\' + filename)
+                            shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model\\'+filename)
                     shutil.copy(original_models_path + '\\model_pictures\\image_' + str(ID_good) + '.png',
                                 local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID) +'.png')
                     model_file = original_models_path + '\\models\\' + str(ID_good) + '\\model_parameters.pickle'
@@ -173,11 +177,11 @@ while starting_index_offset <= 100:
                 # Determine env parameter by adjusting model_parameters values
                 if change_env:
                     for key, value in original_model_params.items():
-                        if key in ['ary','arx','arz','ady','adx','adz','length','height','width']:
+                        if key in ['ary','arx','arz','ady','adx','adz','length','width']:  #,'height'
                             if type(model_parameters_limits[key]) == list:
                                 model_parameters[key] = np.round(np.random.uniform(
-                                    min(model_parameters_limits[key][0],original_model_params[key])
-                                    , model_parameters_limits[key][1]), 2)
+                                    max(model_parameters_limits[key][0],original_model_params[key])
+                                    , model_parameters_limits[key][1]), 1)
                                 # update the changed variables in environment and save the current run as previous
                                 print('U-' + key)
                                 VBA_code = r'''Sub Main
@@ -187,10 +191,11 @@ while starting_index_offset <= 100:
                                 continue
                         if type(model_parameters_limits[key]) == list:
                             model_parameters[key] = np.round(np.random.uniform(
-                                original_model_params[key]
-                                , model_parameters_limits[key][1]), 2)
+                                model_parameters_limits[key][0]  # original_model_params[key]
+                                , model_parameters_limits[key][1]), 1)
+                            model_parameters[key] = np.max([model_parameters[key], 0.1])  # prevent 0 value parameters
                             # update the changed variables in environment and save the current run as previous
-                            print('U-'+key)
+                            # print('U-'+key)
                             VBA_code = r'''Sub Main
                                     StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
                                     End Sub'''
@@ -302,6 +307,5 @@ while starting_index_offset <= 100:
         print(f'\t RUNTIME for #{run_ID:.0f}:\n\t\t ant #{run_ID:.0f} time: {(time.time()-cst_time)/60:.1f} min \n\t\t overall time: {(time.time()-overall_sim_time)/60/60:.2f} hours')
         print(f'\t\t average time: {(time.time() - overall_sim_time) / ants_count/60: .1f} min')
 
-    starting_index_offset += 1
 
 print(' --------------------------------- \n \t\t\t FINISHED THE RUN \n ---------------------------------')
