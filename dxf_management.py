@@ -100,7 +100,7 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     discrete_angle = 45  # discrete angle of rectangles
 
     mode = 'chain'
-    chain_chance = 0.95
+    chain_chance = 0.9
     polygon_type = 0 # polygon_type = :
                         # 0 for first chain - 1st polygon
                         # 1 for second chain - 1st polygon
@@ -116,9 +116,15 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     feed_length = 1
     buffer_size = feed_length * 1
     # feed_center =  np.round(np.random.uniform(20, 80, 2),1)
-    feed_center = np.round(np.random.uniform(np.array([bounds[0][1], bounds[1][1]])*0.2,
-                                             np.array([bounds[0][1], bounds[1][1]])*0.8),1)
-    feed_size =  np.round(np.array([np.random.uniform(max(feed_length*5, l/5), l/5), 1]),1)
+    random_feed_loc = 0  # TODO: decide whether to do it randomly or fixed
+    if random_feed_loc:
+        feed_center = np.round(np.random.uniform(np.array([bounds[0][1], bounds[1][1]])*0.2,
+                                                 np.array([bounds[0][1], bounds[1][1]])*0.8),1)
+        feed_size =  np.round(np.array([np.random.uniform(max(feed_length*2, l/10), l/10), 1]),1)
+    else:
+        feed_width = 5
+        feed_center = np.round([bounds[0][1]/2, feed_width/2],1)
+        feed_size = np.round([np.min([bounds[0][1]/2,20]), feed_width],1)
     feed_angle = 0  #np.random.uniform(0, 360)
 
     centers.append(feed_center)
