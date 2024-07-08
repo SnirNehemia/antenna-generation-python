@@ -2,6 +2,7 @@ import os
 import sys
 # sys.path.append(r"C:\Program Files\Dassault Systemes\B426CSTEmagConnector\CSTStudio\AMD64\python_cst_libraries")
 sys.path.append(r"C:\Program Files (x86)\CST Studio Suite 2024\AMD64\python_cst_libraries")
+
 import cst
 print('can now communicate with ' + cst.__file__) # should print '<PATH_TO_CST_AMD64>\python_cst_libraries\cst\__init__.py'
 # documentation is at "https://space.mit.edu/RADIO/CST_online/Python/main.html"
@@ -23,9 +24,10 @@ from matplotlib import pyplot as plt
 # --- define local path and project name
 # project_name = r'Model3Again'
 simulation_name = 'CST_Model_90degs'
-project_name = r'cst_project'
+project_name = r'simplified'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 local_path = 'C:\\Users\\Public\\'
+local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
@@ -129,7 +131,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 70000
+starting_index = 75000
 for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
