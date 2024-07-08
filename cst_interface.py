@@ -22,9 +22,9 @@ from matplotlib import pyplot as plt
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-project_name = r'Model3_100X100'
+project_name = r'cst_project'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
-local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
+local_path = 'C:\\Users\\Public\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
@@ -98,14 +98,15 @@ model_parameters_limits['thickness'] = 1
 
 """ create all tree folder paths """
 # --- from here on I define the paths based on the manually defined project and local path ---
-project_path = local_path +project_name + "\\CST_Model.cst"
-results_path = local_path+project_name+"\\output\\results"
+final_dir = local_path + project_name
+project_path = final_dir + "\\CST_Model2.cst"
+results_path = final_dir+"\\output\\results"
 # dxf_directory = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name_DXF
-models_path =  local_path +project_name+"\\output\\models"
-pattern_source_path = (local_path+project_name+"\\CST_Model" +
+models_path =  final_dir+"\\output\\models"
+pattern_source_path = (final_dir+"\\CST_Model" +
                   r'\Export\Farfield')
-save_S11_pic_dir = local_path+project_name+"\\output\\S11_pictures"
-STEP_source_path = (local_path+project_name+"\\CST_Model" +
+save_S11_pic_dir = final_dir+"\\output\\S11_pictures"
+STEP_source_path = (final_dir+"\\CST_Model" +
                   r'\Model\3D')
 # --- for export STLs
 file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
@@ -127,54 +128,55 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 60000
-for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problematic!
+starting_index = 66462
+for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
             run_ID) + '.png'):  # os.path.isdir(models_path + '\\' + str(run_ID)):
-        print(str(run_ID) + 'ran already')
+        print(str(run_ID) + ' ran already')
         continue
+    print(str(run_ID) + ' running')
     succeed = 0
     repeat_count = 0
     while not succeed:
+        cst_time = time.time()
+        # create\choose model
+        if not os.path.isdir(models_path + '\\' + str(run_ID)):
+            os.mkdir(models_path + '\\' + str(run_ID))
+        # Delete files in the CST folder to prevent errors
+        target_SPI_folder =final_dir + "\\CST_Model\\Result"
+        for filename in os.listdir(target_SPI_folder):
+            if filename.endswith('.spi'):
+                os.remove(final_dir + "\\CST_Model\\Result\\" + filename)
+        print('deleted SPI... ', end='')
+        # Determine env parameter by adjusting model_parameters values
+        if change_env:
+            for key, value in model_parameters_limits.items():
+                if type(value) == list:
+                    model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
+                    # update the changed variables in environment and save the current run as previous
+                    model_parameters[key] = np.max([model_parameters[key], 0.1])
+                    print('U-'+key)
+                    VBA_code = r'''Sub Main
+                            StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
+                            End Sub'''
+                    project.schematic.execute_vba_code(VBA_code)
+        if create_new_models: # for new models
+            dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=model_parameters)
+        else: # for existing models
+            original_model_path = original_models_path + '\\models\\' + str(run_ID_local)
+            curr_model_path = models_path
+            for filename in os.listdir(original_model_path):
+                if filename.endswith('.dxf'):
+                    shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID))
+                    shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model')
+            shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
+                        local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
+        print('created DXFs... ',end='')
+        """ Rebuild the model and run it """
+        project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
+        print(' run solver... ',end='')
         try:
-            cst_time = time.time()
-            # create\choose model
-            if not os.path.isdir(models_path + '\\' + str(run_ID)):
-                os.mkdir(models_path + '\\' + str(run_ID))
-            # Delete files in the CST folder to prevent errors
-            target_SPI_folder = local_path +project_name + "\\CST_Model\\Result"
-            for filename in os.listdir(target_SPI_folder):
-                if filename.endswith('.spi'):
-                    os.remove(local_path +project_name + "\\CST_Model\\Result\\" + filename)
-            print('deleted SPI... ', end='')
-            # Determine env parameter by adjusting model_parameters values
-            if change_env:
-                for key, value in model_parameters_limits.items():
-                    if type(value) == list:
-                        model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
-                        # update the changed variables in environment and save the current run as previous
-                        model_parameters[key] = np.max([model_parameters[key], 0.1])
-                        print('U-'+key)
-                        VBA_code = r'''Sub Main
-                                StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
-                                End Sub'''
-                        project.schematic.execute_vba_code(VBA_code)
-            if create_new_models: # for new models
-                dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=model_parameters)
-            else: # for existing models
-                original_model_path = original_models_path + '\\models\\' + str(run_ID_local)
-                curr_model_path = models_path
-                for filename in os.listdir(original_model_path):
-                    if filename.endswith('.dxf'):
-                        shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID))
-                        shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model')
-                shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
-                            local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
-            print('created DXFs... ',end='')
-            """ Rebuild the model and run it """
-            project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
-            print(' run solver... ',end='')
             project.model3d.run_solver()
             print(' finished simulation... ', end='')
             succeed = 1
@@ -183,10 +185,10 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
             print("An exception occurred:", error)  # An exception occurred: division by zero
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print('\n\n',exc_type, fname, exc_tb.tb_lineno,'\n\n')
+            print('\n\n', exc_type, fname, exc_tb.tb_lineno, '\n\n')
             repeat_count += 1
             time.sleep(2)  # wait for 1 minutes, for the case of temporary license error
-            os.system("taskkill /im \"CST DESIGN ENVIRONMENT_AMD64.exe\"")
+            os.system('taskkill /im "CST DESIGN ENVIRONMENT_AMD64.exe" /F')
             time.sleep(30)  # wait for 0.5 minutes, for the case of temporary license error
             print(f"\n\n ------------- FAILED IN #{run_ID:.0f} ------------\n")
             cst_instance = cst.interface.DesignEnvironment()
@@ -196,12 +198,17 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
 
             if repeat_count > 2:
                 dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name,
-                                         local_path=local_path, model=3)
+                                         local_path=local_path, model=model_parameters)
                 project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
                 time.sleep(60)  # wait for 20 minutes, for the case of temporary license error
             if repeat_count == 6:
                 input('PRESS ENTER TO CONTINUE ----> ERROR ALERT')
+        print('counts repeated : ',repeat_count)
+
     """ access results """
+    if not succeed:
+        print('Did not succeed, continue to next iteration.')
+        continue # will immediately start next id and will not
     S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
     S11 = np.array(S_results.get_ydata())
     freq = np.array(S_results.get_xdata())
