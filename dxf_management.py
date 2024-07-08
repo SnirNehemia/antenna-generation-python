@@ -57,7 +57,7 @@ def rot_mat(angle):
     return np.array([[c, -s], [s, c]])
 
 def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, debug_mode=False, polygons_parameters='',
-              project_name='', local_path='', model=''):
+              project_name='', local_path='', model='',center_feed=0):
     # debug mode prints the failed polygon
     if seed > 0:
         np.random.seed(seed)
@@ -94,7 +94,7 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     rect_amount = 75
     sub_amount = 10
     sub_size = [[l/20, l/10], [0.5, 1.5]]
-    rect_size = [[l/20, l/10], [0.5, 2]]
+    rect_size = [[l/20, l/5], [0.5, 2]]
     rect_center = [[bounds[0][1]*0.1, bounds[0][1]*0.9], [bounds[1][1]*0.1, bounds[1][1]*0.9]]
     max_poly_num = 5  # maximum amount of merged polygons
     discrete_angle = 90  # discrete angle of rectangles
@@ -120,6 +120,8 @@ def CreateDXF(plot=False, seed=-1, run_ID='', suppress_prints=True, save=True, d
     # feed_center =  np.round(np.random.uniform(20, 80, 2),1)
     feed_center = np.round(np.random.uniform(np.array([bounds[0][1], bounds[1][1]])*0.2,
                                              np.array([bounds[0][1], bounds[1][1]])*0.8),decimal_distance)
+    if center_feed:
+        feed_center[0] = np.round(bounds[0][1]/2,decimal_distance)
     feed_size =  np.round(np.array([np.random.uniform(max(feed_length*5, l/5), l/5), 1]),decimal_distance)
     feed_angle = 0  #np.random.uniform(0, 360)
 

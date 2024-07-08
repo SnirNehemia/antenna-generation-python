@@ -22,6 +22,7 @@ from matplotlib import pyplot as plt
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
+simulation_name = 'CST_Model_90degs'
 project_name = r'cst_project'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 local_path = 'C:\\Users\\Public\\'
@@ -29,7 +30,7 @@ local_path = 'C:\\Users\\Public\\'
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
 # --- choose whether to use fix or changed environment
-change_env = 1
+change_env = 0
 
 # model_parameters = {
 #     'type': 1,
@@ -46,7 +47,7 @@ model_parameters = {
     'plane':'yz-flipped',#changetoyz-flipped
     #parametersthatchangeboththeantennaandtheenviroment
     'length':60,#coordinatealongthev(green)axis
-    'width':30,#coordinatealongthex(red)axis
+    'width':10,#coordinatealongthex(red)axis
     'adx':0.9,
     'arx':0.9,
     'adz':0.9,
@@ -99,14 +100,14 @@ model_parameters_limits['thickness'] = 1
 """ create all tree folder paths """
 # --- from here on I define the paths based on the manually defined project and local path ---
 final_dir = local_path + project_name
-project_path = final_dir + "\\CST_Model2.cst"
+project_path = final_dir + "\\" + simulation_name + ".cst"
 results_path = final_dir+"\\output\\results"
 # dxf_directory = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name_DXF
 models_path =  final_dir+"\\output\\models"
-pattern_source_path = (final_dir+"\\CST_Model" +
+pattern_source_path = (final_dir+"\\" + simulation_name +
                   r'\Export\Farfield')
 save_S11_pic_dir = final_dir+"\\output\\S11_pictures"
-STEP_source_path = (final_dir+"\\CST_Model" +
+STEP_source_path = (final_dir+"\\" + simulation_name +
                   r'\Model\3D')
 # --- for export STLs
 file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
@@ -128,7 +129,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 66462
+starting_index = 70000
 for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
@@ -144,11 +145,19 @@ for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problema
         if not os.path.isdir(models_path + '\\' + str(run_ID)):
             os.mkdir(models_path + '\\' + str(run_ID))
         # Delete files in the CST folder to prevent errors
-        target_SPI_folder =final_dir + "\\CST_Model\\Result"
+        target_SPI_folder =final_dir + "\\" + simulation_name +"\\Result"
         for filename in os.listdir(target_SPI_folder):
             if filename.endswith('.spi'):
-                os.remove(final_dir + "\\CST_Model\\Result\\" + filename)
-        print('deleted SPI... ', end='')
+                os.remove(target_SPI_folder +"\\" + filename)
+        target_delete_folder = final_dir + "\\" + simulation_name +"\\Model\\3D"
+        for filename in os.listdir(target_delete_folder):
+            if filename.endswith('.stp') or filename.endswith('.stl') or filename.endswith('.hlg'):
+                os.remove(target_delete_folder +"\\" + filename)
+        target_delete_folder = final_dir + "\\" + simulation_name +"\\Export\\Farfield"
+        for filename in os.listdir(target_delete_folder):
+            if filename.endswith('.txt'):
+                os.remove(target_delete_folder +"\\" + filename)
+        print('deleted SPI, models and results... ', end='')
         # Determine env parameter by adjusting model_parameters values
         if change_env:
             for key, value in model_parameters_limits.items():
@@ -208,7 +217,7 @@ for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problema
     """ access results """
     if not succeed:
         print('Did not succeed, continue to next iteration.')
-        continue # will immediately start next id and will not
+        continue # will immediately start next id
     S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
     S11 = np.array(S_results.get_ydata())
     freq = np.array(S_results.get_xdata())
