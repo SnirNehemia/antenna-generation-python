@@ -44,7 +44,7 @@ MY_PATH_sub_folder = '\\sub_folder'
 import time
 import numpy as np
 start = time.time()
-for i in range(10000):
+for i in range(4109,10000):
     dxf_management.CreateDXF(plot=False, run_ID=str(i), project_name=MY_PATH_sub_folder, local_path=MY_PATH,
                              model=model_parameters)
     print(i)
