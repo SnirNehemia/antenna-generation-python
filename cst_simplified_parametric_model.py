@@ -18,7 +18,7 @@ import pickle
 import time
 import dxf_management
 from matplotlib import pyplot as plt
-from datetime import datetime
+
 
 """ define run parameters """
 # --- define local path and project name
@@ -131,14 +131,13 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 80000
+starting_index = 75000
 for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
             run_ID) + '.png'):  # os.path.isdir(models_path + '\\' + str(run_ID)):
         print(str(run_ID) + ' ran already')
         continue
-    print('time is: %s' % datetime.now())
     print(str(run_ID) + ' running')
     succeed = 0
     repeat_count = 0
@@ -237,6 +236,8 @@ for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problema
     # save the farfield
     copy_tree(pattern_source_path, results_path + '\\' + str(run_ID))
 
+    # TODO: save the DXFs too in 3 seperate files. try to also save the picture of the ant!
+    #  maybe after we save it we can load it with ezdxf and then print it in the same way.
     # save and copy the STEP model:
     # save:
     for file_name in file_names:
