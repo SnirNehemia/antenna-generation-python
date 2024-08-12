@@ -16,17 +16,18 @@ import pickle
 import time
 import dxf_management
 from matplotlib import pyplot as plt
-
+from datetime import datetime
 
 """ define run parameters """
 # --- define local path and project name
-simulation_name = r'CST_Model_100X100'
+simulation_name = r'CST_Model_100X100_clean'
 project_name = 'cst_project'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 local_path = 'C:\\Users\\Public\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 0 # 1 for creating new models, 0 to use existing ones
-original_models_path = r'C:\Users\shg\OneDrive - Tel-Aviv University\AI RF design\model_3_data\output'  # path to existing models output folder
+# original_models_path = r'C:\Users\shg\OneDrive - Tel-Aviv University\AI RF design\model_3_data\output'  # path to existing models output folder
+original_models_path = r'E:\model_3_data\output' # path to existing models output folder
 # --- choose whether to use fix or changed environment
 change_env = 1
 
@@ -134,11 +135,11 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 50500
+starting_index = 90000
 threshold_ID = 10000
 
 
-good_ants_file = original_models_path + '\\good_ants_ID-9.pickle'
+good_ants_file = original_models_path + '\\good_ants_simplified_ID-9.pickle'
 file = open(good_ants_file, 'rb')
 good_ants_file_list = pickle.load(file)
 file.close()
@@ -153,6 +154,7 @@ for ID_num in range(0, 99):
         if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(run_ID) + '.png'): #os.path.isdir(models_path + '\\' + str(run_ID)):
             print(str(run_ID) + 'ran already')
             continue
+        print('time is: %s'%datetime.now())
         while not succeed:
             try:
                 cst_time = time.time()
@@ -202,6 +204,8 @@ for ID_num in range(0, 99):
                 for filename in os.listdir(target_delete_folder):
                     if filename.endswith('.txt'):
                         os.remove(target_delete_folder + "\\" + filename)
+                # target_delete_folder = final_dir + "\\" + simulation_name + "\\Result"
+                # os.remove(target_delete_folder + "\\" + "Storage.sdb")
                 print('deleted SPI and model files... ', end='')
                 # Determine env parameter by adjusting model_parameters values
                 if change_env:
