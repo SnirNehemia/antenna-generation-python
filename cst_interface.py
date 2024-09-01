@@ -27,7 +27,7 @@ simulation_name = 'CST_Model_90degs'
 project_name = r'simplified'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 local_path = 'C:\\Users\\Public\\'
-local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
+local_path = 'G:\\local_model_3_path\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
@@ -131,8 +131,8 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 80000
-for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problematic!
+starting_index = 80207
+for run_ID_local in range(0, 9000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
             run_ID) + '.png'):  # os.path.isdir(models_path + '\\' + str(run_ID)):

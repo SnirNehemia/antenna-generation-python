@@ -23,7 +23,7 @@ from matplotlib import pyplot as plt
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_90degs'
+simulation_name = 'CST_Model_parametric'
 project_name = r'simplified'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 local_path = 'C:\\Users\\Public\\'
@@ -43,7 +43,7 @@ change_env = 0
 #     'ady': 0.8,
 #     'ary': 0.8
 # }
-
+# TODO: update to the ones in the model!
 model_parameters = {
     'type':3,
     'plane':'yz-flipped',#changetoyz-flipped
