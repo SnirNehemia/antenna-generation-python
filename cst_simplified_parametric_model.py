@@ -16,7 +16,7 @@ from distutils.dir_util import copy_tree
 import shutil
 import pickle
 import time
-import dxf_management
+import parametric_ant_utils
 from matplotlib import pyplot as plt
 
 
@@ -26,40 +26,30 @@ from matplotlib import pyplot as plt
 simulation_name = 'CST_Model_parametric'
 project_name = r'simplified'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
-local_path = 'C:\\Users\\Public\\'
-local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
+# local_path = 'C:\\Users\\Public\\'
+# local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
+local_path = 'G:\\local_model_3_path\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
 # --- choose whether to use fix or changed environment
 change_env = 0
 
-# model_parameters = {
-#     'type': 1,
-#     'height': 160, # coordinate along the y (green) axis
-#     'width': 300, # coordinate along the x (red) axis
-#     'adx': 0.8,
-#     'arx': 0.75,
-#     'ady': 0.8,
-#     'ary': 0.8
-# }
-# TODO: update to the ones in the model!
 model_parameters = {
     'type':3,
     'plane':'yz-flipped',#changetoyz-flipped
     #parametersthatchangeboththeantennaandtheenviroment
-    'length':60,#coordinatealongthev(green)axis
     'width':10,#coordinatealongthex(red)axis
+    'height': 50,
+    'length':60,#coordinatealongthev(green)axis
+    'thickness':1,
     'adx':0.9,
     'arx':0.9,
+    'ady': 0.9,
+    'ary': 0.85,
     'adz':0.9,
     'arz':0.9,
     'a':0.6,
-    #parametersthatchangeonlytheenviromentinaplane=xzconfiguration
-    'thickness':1,
-    'height':50,
-    'ady':0.85,
-    'ary':0.85,
     'b':0.8,
     'c':0.8,
     'bdx':1,
@@ -79,10 +69,11 @@ model_parameters = {
     'ddy':0.8,
     'dry':0.75,
     'ddz':1,
-    'drz':1
+    'drz':1,
+    'feed_length':2
 }
 
-## --- define the parameters limits for randomization:
+## --- define the model parameters limits for randomization:
 model_parameters_limits = model_parameters.copy()
 for key, value in model_parameters_limits.items():
     if type(value) == int:
@@ -98,6 +89,9 @@ model_parameters_limits['ary'] = [0.7, 1]
 model_parameters_limits['adz'] = [0.7, 1]
 model_parameters_limits['arz'] = [0.7, 1]
 model_parameters_limits['thickness'] = 1
+
+ant_parameters_names = parametric_ant_utils.get_parameters_names()
+
 
 """ create all tree folder paths """
 # --- from here on I define the paths based on the manually defined project and local path ---
@@ -131,8 +125,8 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 75000
-for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problematic!
+starting_index = 100000
+for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
             run_ID) + '.png'):  # os.path.isdir(models_path + '\\' + str(run_ID)):
@@ -156,9 +150,10 @@ for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problema
             if filename.endswith('.stp') or filename.endswith('.stl') or filename.endswith('.hlg'):
                 os.remove(target_delete_folder +"\\" + filename)
         target_delete_folder = final_dir + "\\" + simulation_name +"\\Export\\Farfield"
-        for filename in os.listdir(target_delete_folder):
-            if filename.endswith('.txt'):
-                os.remove(target_delete_folder +"\\" + filename)
+        if os.path.isdir(target_delete_folder):
+            for filename in os.listdir(target_delete_folder):
+                if filename.endswith('.txt'):
+                    os.remove(target_delete_folder +"\\" + filename)
         print('deleted SPI, models and results... ', end='')
         # Determine env parameter by adjusting model_parameters values
         if change_env:
@@ -173,17 +168,57 @@ for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problema
                             End Sub'''
                     project.schematic.execute_vba_code(VBA_code)
         if create_new_models: # for new models
-            dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name, local_path=local_path, model=model_parameters)
+            ant_parameters = parametric_ant_utils.randomize_ant(ant_parameters_names,model_parameters)
+            for key, value in ant_parameters.items():
+                VBA_code = r'''Sub Main
+                        StoreParameter("'''+key+'''", '''+str(value)+''')
+                        End Sub'''
+                project.schematic.execute_vba_code(VBA_code)
+            # save picture of the antenna
+            parametric_ant_utils.save_figure(model_parameters, ant_parameters, local_path + project_name, run_ID)
+            # plt.ioff()
+            # f, ax1 = plt.subplots()
+            # wings = ['w1', 'w2', 'q1', 'q2']
+            # Sz = (model_parameters['length'] * model_parameters['adz']* model_parameters['arz']/2-ant_parameters['w']/2
+            #       - model_parameters['feed_length']/2)
+            # Sy = model_parameters['height'] * model_parameters['ady']* model_parameters['ary']-ant_parameters['w']
+            # data_linewidth_plot([0,0], [model_parameters['feed_length']/2,-model_parameters['feed_length']/2],
+            #                         linewidth=ant_parameters['w'], alpha=0.4, color='r')
+            # for wing in wings:
+            #     z = [model_parameters['feed_length']/2]
+            #     y = [0,0]
+            #     for i1 in range(3):
+            #         z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
+            #         z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
+            #         y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
+            #         y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
+            #     y.pop()
+            #     data_linewidth_plot(y, z,
+            #                             linewidth=ant_parameters['w'], alpha=0.4, color='b')
+            # wings = ['w3', 'q3']
+            # for wing in wings:
+            #     z = [model_parameters['feed_length'] / 2]
+            #     y = [0, 0]
+            #     z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
+            #     z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
+            #     y.append(Sy * ant_parameters[f'{wing}y{1:d}'])
+            #     data_linewidth_plot(y, z,
+            #                         linewidth=ant_parameters['w'], alpha=0.4, color='b')
+            #     plt.title('dimensions in mm')
+            #     plt.show(block=False)
+            #     f.savefig(local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
+            #     plt.close(f)
         else: # for existing models
-            original_model_path = original_models_path + '\\models\\' + str(run_ID_local)
-            curr_model_path = models_path
-            for filename in os.listdir(original_model_path):
-                if filename.endswith('.dxf'):
-                    shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID))
-                    shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model')
-            shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
-                        local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
-        print('created DXFs... ',end='')
+            print('not supported yet')
+            # original_model_path = original_models_path + '\\models\\' + str(run_ID_local)
+            # curr_model_path = models_path
+            # for filename in os.listdir(original_model_path):
+            #     if filename.endswith('.dxf'):
+            #         shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID))
+            #         shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model')
+            # shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
+            #             local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
+        print('created antenna... ',end='')
         """ Rebuild the model and run it """
         project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
         print(' run solver... ',end='')
@@ -193,7 +228,7 @@ for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problema
             succeed = 1
         except Exception as error:
             # handle the exception
-            print("An exception occurred:", error)  # An exception occurred: division by zero
+            print("An exception occurred:", error)  # An exception occurred
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print('\n\n', exc_type, fname, exc_tb.tb_lineno, '\n\n')
@@ -208,10 +243,16 @@ for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problema
             results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
             if repeat_count > 2:
-                dxf_management.CreateDXF(plot=False, run_ID=str(run_ID), project_name=project_name,
-                                         local_path=local_path, model=model_parameters)
+                ant_parameters = parametric_ant_utils.randomize_ant(ant_parameters_names,model_parameters)
+                for key, value in ant_parameters.items():
+                    VBA_code = r'''Sub Main
+                                        StoreParameter("''' + key + '''", ''' + str(value) + ''')
+                                        End Sub'''
+                    project.schematic.execute_vba_code(VBA_code)
+                # save picture of the antenna
+                parametric_ant_utils.save_figure(model_parameters, ant_parameters, local_path + project_name, run_ID)
                 project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
-                time.sleep(60)  # wait for 20 minutes, for the case of temporary license error
+                time.sleep(30)  # wait for 20 minutes, for the case of temporary license error
             if repeat_count == 6:
                 input('PRESS ENTER TO CONTINUE ----> ERROR ALERT')
         print('counts repeated : ',repeat_count)
@@ -296,6 +337,10 @@ for run_ID_local in range(0, 5000):  #15001-starting_index-1 % 15067 is problema
     file_name = models_path + '\\' + str(run_ID) + '\\model_parameters.pickle'
     file = open(file_name, 'wb')
     pickle.dump(model_parameters, file)
+    file.close()
+    file_name = models_path + '\\' + str(run_ID) + '\\ant_parameters.pickle'
+    file = open(file_name, 'wb')
+    pickle.dump(ant_parameters, file)
     file.close()
     # save picture of the S11
     plt.ioff()
