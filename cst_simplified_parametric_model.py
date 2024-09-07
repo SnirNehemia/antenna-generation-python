@@ -168,7 +168,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
                             End Sub'''
                     project.schematic.execute_vba_code(VBA_code)
         if create_new_models: # for new models
-            ant_parameters = parametric_ant_utils.randomize_ant(ant_parameters_names,model_parameters)
+            ant_parameters = parametric_ant_utils.randomize_ant(ant_parameters_names,model_parameters,seed=run_ID)
             for key, value in ant_parameters.items():
                 VBA_code = r'''Sub Main
                         StoreParameter("'''+key+'''", '''+str(value)+''')
