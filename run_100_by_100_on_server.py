@@ -86,7 +86,14 @@ for key, value in model_parameters_limits.items():
         if model_parameters_limits[key]<=1:
             model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
-# model_parameters_limits['adx'] = [0.2,0.8]
+model_parameters_limits['adx'] = [0.9,1]
+model_parameters_limits['adx'] = [0.9,1]
+model_parameters_limits['a'] = [0.1,0.2]
+model_parameters_limits['c'] = [0.1,0.2]
+model_parameters_limits['bdz'] = [0.5,1]
+model_parameters_limits['brz'] = [0.5,1]
+model_parameters_limits['cdz'] = [0.5,1]
+model_parameters_limits['crz'] = [0.5,1]
 model_parameters_limits['length'] = [30,100]
 model_parameters_limits['width'] = [30,100]
 model_parameters_limits['height'] = [30, 100]
@@ -201,9 +208,10 @@ for ID_num in range(0, 99):
                     if filename.endswith('.stp') or filename.endswith('.stl') or filename.endswith('.hlg'):
                         os.remove(target_delete_folder + "\\" + filename)
                 target_delete_folder = final_dir + "\\" + simulation_name + "\\Export\\Farfield"
-                for filename in os.listdir(target_delete_folder):
-                    if filename.endswith('.txt'):
-                        os.remove(target_delete_folder + "\\" + filename)
+                if os.path.isdir(target_delete_folder):
+                    for filename in os.listdir(target_delete_folder):
+                        if filename.endswith('.txt'):
+                            os.remove(target_delete_folder + "\\" + filename)
                 # target_delete_folder = final_dir + "\\" + simulation_name + "\\Result"
                 # os.remove(target_delete_folder + "\\" + "Storage.sdb")
                 print('deleted SPI and model files... ', end='')
