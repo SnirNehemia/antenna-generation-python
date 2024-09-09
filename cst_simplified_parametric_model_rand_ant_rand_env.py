@@ -23,7 +23,7 @@ from datetime import datetime
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_parametric_100_run'
+simulation_name = 'CST_Model_parametric'
 project_name = r'simplified'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
@@ -33,7 +33,7 @@ local_path = 'G:\\local_model_3_path\\'
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
 # --- choose whether to use fix or changed environment
-change_env = 0
+change_env = 1
 
 model_parameters = {
     'type':3,
@@ -81,13 +81,13 @@ for key, value in model_parameters_limits.items():
             model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['length'] = [50,70]
+model_parameters_limits['length'] = [50,100]
 model_parameters_limits['width'] = [10,40]
-model_parameters_limits['height'] = [40, 60]
-model_parameters_limits['ady'] = [0.7, 1]
-model_parameters_limits['ary'] = [0.7, 1]
-model_parameters_limits['adz'] = [0.7, 1]
-model_parameters_limits['arz'] = [0.7, 1]
+model_parameters_limits['height'] = [40, 100]
+model_parameters_limits['ady'] = [0.4, 1]
+model_parameters_limits['ary'] = [0.4, 1]
+model_parameters_limits['adz'] = [0.4, 1]
+model_parameters_limits['arz'] = [0.4, 1]
 model_parameters_limits['thickness'] = 1
 
 ant_parameters_names = parametric_ant_utils.get_parameters_names()
@@ -125,7 +125,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 100000
+starting_index = 110000
 for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
