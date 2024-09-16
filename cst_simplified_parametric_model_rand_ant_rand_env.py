@@ -23,7 +23,7 @@ from datetime import datetime
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_parametric'
+simulation_name = 'CST_Model_parametric_move_feed'
 project_name = r'simplified'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
@@ -81,9 +81,9 @@ for key, value in model_parameters_limits.items():
             model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['length'] = [50,100]
-model_parameters_limits['width'] = [10,40]
-model_parameters_limits['height'] = [40, 100]
+model_parameters_limits['length'] = [50,200]
+model_parameters_limits['width'] = [10,100]
+model_parameters_limits['height'] = [50, 200]
 model_parameters_limits['ady'] = [0.4, 1]
 model_parameters_limits['ary'] = [0.4, 1]
 model_parameters_limits['adz'] = [0.4, 1]
@@ -158,12 +158,21 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
         print('deleted SPI, models and results... ', end='')
         # Determine env parameter by adjusting model_parameters values
         if change_env:
+            # randomize environment
+            valid_env = 0
+            while not valid_env:
+                for key, value in model_parameters_limits.items():
+                    if type(value) == list:
+                        model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
+                        # update the changed variables in environment and save the current run as previous
+                        model_parameters[key] = np.max([model_parameters[key], 0.1])
+                if (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 > 50 and
+                    model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] >50):
+                    valid_env = 1
+            # update model
             for key, value in model_parameters_limits.items():
                 if type(value) == list:
-                    model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
-                    # update the changed variables in environment and save the current run as previous
-                    model_parameters[key] = np.max([model_parameters[key], 0.1])
-                    print('U-'+key)
+                    # print('U-'+key)
                     VBA_code = r'''Sub Main
                             StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
                             End Sub'''

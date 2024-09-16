@@ -58,16 +58,19 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
         np.random.seed(seed)
     valid_ant = 0
     count_retries = 0
+    ant_parameters['fx'] = np.round(np.random.uniform(), decimals=1)
     while not valid_ant:
         for key in parameters_names:
             ant_parameters[key] = np.max([np.round(np.random.uniform(),decimals=1),0.1])
         ant_parameters['w'] = np.random.randint(1, 5)
+        ant_parameters['q1z3'] = np.round(np.random.uniform(),decimals=1)
+        ant_parameters['w1z3'] = np.round(np.random.uniform(), decimals=1)
         Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
               - model_parameters['feed_length'] / 2)
         Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
         valid_ant = check_ant_validity(ant_parameters,Sz,Sy)
         count_retries += 1
-        if count_retries%100 == 0:
+        if count_retries%1000 == 0:
             print(f'retried {count_retries:d} times, trying some more')
     print(f'retried {count_retries:d} times')
     return ant_parameters
@@ -108,8 +111,7 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
     Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
           - model_parameters['feed_length'] / 2)
     Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
-    data_linewidth_plot([0, 0], [model_parameters['feed_length'] / 2, -model_parameters['feed_length'] / 2],
-                        linewidth=ant_parameters['w'], alpha=alpha, color='r')
+
     for wing in wings:
         if wing[0]=='q':
             sign=-1
@@ -132,13 +134,20 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
         else:
             sign=1
         z = [model_parameters['feed_length'] / 2]
-        y = [0, 0]
+        y = [Sy * ant_parameters['fx'], Sy * ant_parameters['fx']]
         z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
         z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
         y.append(Sy * ant_parameters[f'{wing}y{1:d}'])
         data_linewidth_plot(y, sign*np.array(z),
                             linewidth=ant_parameters['w'], alpha=alpha, color='b')
+    data_linewidth_plot([0, 0],
+                        [model_parameters['feed_length'] / 2, -model_parameters['feed_length'] / 2],
+                        linewidth=ant_parameters['w'], alpha=alpha, color='w')
+    data_linewidth_plot([Sy * ant_parameters['fx'], Sy * ant_parameters['fx']],
+                        [model_parameters['feed_length'] / 2, -model_parameters['feed_length'] / 2],
+                        linewidth=ant_parameters['w']+0.1, alpha=alpha, color='r')
     plt.title('dimensions in mm')
+    ax1.set_aspect('equal')
     plt.show(block=False)
     f.savefig(output_path + '\\output\\model_pictures\\image_' + str(run_ID) + '.png')
     plt.close(f)
