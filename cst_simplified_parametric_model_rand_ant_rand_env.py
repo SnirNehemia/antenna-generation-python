@@ -23,7 +23,7 @@ from datetime import datetime
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_parametric_move_feed'
+simulation_name = 'CST_Model_better_parametric'
 project_name = r'simplified'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'

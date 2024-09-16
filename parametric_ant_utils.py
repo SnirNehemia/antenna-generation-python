@@ -39,12 +39,14 @@ class data_linewidth_plot():
 def get_parameters_names():
     parameters_names = []
     for iw in range(3):
+        parameters_names.append(f'w{iw + 1:d}z{0}')
         for i1 in range(3):
             if iw==2 and i1>=2:
                 continue
             parameters_names.append(f'w{iw+1:d}z{i1+1:d}')
             parameters_names.append(f'w{iw + 1:d}y{i1 + 1:d}')
     for iw in range(3):
+        parameters_names.append(f'q{iw + 1:d}z{0}')
         for i1 in range(3):
             if iw==2 and i1>=2:
                 continue
@@ -62,7 +64,7 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
     while not valid_ant:
         for key in parameters_names:
             ant_parameters[key] = np.max([np.round(np.random.uniform(),decimals=1),0.1])
-        ant_parameters['w'] = np.random.randint(1, 5)
+        ant_parameters['w'] = np.random.randint(1, 15)
         ant_parameters['q1z3'] = np.round(np.random.uniform(),decimals=1)
         ant_parameters['w1z3'] = np.round(np.random.uniform(), decimals=1)
         Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
@@ -102,6 +104,9 @@ def check_ant_validity(ant_parameters,Sz,Sy):
         if np.abs(ant_parameters[f'{wing}y2'] - ant_parameters[f'{wing}y1']) < ant_parameters['w']/Sz: return 0
         if np.abs(ant_parameters[f'{wing}y1'] - ant_parameters[f'{wing}y3']) < ant_parameters['w']/Sz: return 0
         if np.abs(ant_parameters[f'{wing}y2'] - ant_parameters[f'{wing}y3']) < ant_parameters['w']/Sz: return 0
+    wings = ['w1', 'w2','w3', 'q1', 'q2','q3']
+    for wing in wings:
+        if np.abs(ant_parameters[f'{wing}z0'] - ant_parameters[f'{wing}z1']) < ant_parameters['w'] / Sz: return 0
     return 1
 
 def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
@@ -111,13 +116,14 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
     Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
           - model_parameters['feed_length'] / 2)
     Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
-
+    data_linewidth_plot([Sy * ant_parameters['fx'], Sy * ant_parameters['fx']],
+                        [-10,10], linewidth=ant_parameters['w'] + 0.1, alpha=alpha, color='k')
     for wing in wings:
         if wing[0]=='q':
             sign=-1
         else:
             sign=1
-        z = [model_parameters['feed_length'] / 2]
+        z = [Sz * ant_parameters[f'{wing}z0']]
         y = [0, 0]
         for i1 in range(3):
             z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
@@ -133,7 +139,7 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
             sign=-1
         else:
             sign=1
-        z = [model_parameters['feed_length'] / 2]
+        z = [Sz * ant_parameters[f'{wing}z0']]
         y = [Sy * ant_parameters['fx'], Sy * ant_parameters['fx']]
         z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
         z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
