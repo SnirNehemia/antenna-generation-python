@@ -158,6 +158,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
         print('deleted SPI, models and results... ', end='')
         # Determine env parameter by adjusting model_parameters values
         if change_env:
+            np.random.seed(run_ID)
             # randomize environment
             valid_env = 0
             while not valid_env:
