@@ -60,7 +60,7 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
         np.random.seed(seed)
     valid_ant = 0
     count_retries = 0
-    ant_parameters['fx'] = np.round(np.random.uniform(), decimals=1)
+    ant_parameters['fx'] = 0 # np.round(np.random.uniform(), decimals=1)
     while not valid_ant:
         for key in parameters_names:
             ant_parameters[key] = np.max([np.round(np.random.uniform(),decimals=1),0.1])
