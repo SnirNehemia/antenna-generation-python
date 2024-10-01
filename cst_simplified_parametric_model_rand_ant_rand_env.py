@@ -230,7 +230,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
             # shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
             #             local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
         print('created antenna... ',end='')
-        """ Rebuild the model and run it """
+        """ ------------------- --------------- Rebuild the model and run it ------------------ ------------------ """
         project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
         print(' run solver... ',end='')
         try:
