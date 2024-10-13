@@ -74,6 +74,7 @@ model_parameters = {
 }
 
 ## --- define the model parameters limits for randomization:
+rand_mode = 'normal'  # 'normal' or 'uniform'
 model_parameters_limits = model_parameters.copy()
 for key, value in model_parameters_limits.items():
     if type(value) == int:
@@ -81,9 +82,9 @@ for key, value in model_parameters_limits.items():
             model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['length'] = [50,200]
+model_parameters_limits['length'] = [30,150]
 model_parameters_limits['width'] = [10,100]
-model_parameters_limits['height'] = [50, 200]
+model_parameters_limits['height'] = [10, 100]
 model_parameters_limits['ady'] = [0.4, 1]
 model_parameters_limits['ary'] = [0.4, 1]
 model_parameters_limits['adz'] = [0.4, 1]
@@ -164,11 +165,19 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
             while not valid_env:
                 for key, value in model_parameters_limits.items():
                     if type(value) == list:
-                        model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
+                        if rand_mode == 'uniform':
+                            model_parameters[key] = np.round(np.random.uniform(value[0], value[1]), 1)
+                        if rand_mode == 'normal':
+                            model_parameters[key] = np.round(np.random.normal((value[0] + value[1]) / 2,
+                                                                              (value[1] - value[0]) / 6, ), 1)
                         # update the changed variables in environment and save the current run as previous
-                        model_parameters[key] = np.max([model_parameters[key], 0.1])
-                if (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 > 50 and
-                    model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] >50):
+                        if len(key) == 3:
+                            model_parameters[key] = np.max([model_parameters[key], 0.1])
+                            model_parameters[key] = np.min([model_parameters[key], 1])
+                        model_parameters[key] = np.max([model_parameters[key], value[0]])
+                        model_parameters[key] = np.min([model_parameters[key], value[1]])
+                if (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 > 20 and
+                        model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] > 20):
                     valid_env = 1
             # update model
             for key, value in model_parameters_limits.items():
