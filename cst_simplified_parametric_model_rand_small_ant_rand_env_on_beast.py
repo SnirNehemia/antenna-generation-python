@@ -16,7 +16,7 @@ from distutils.dir_util import copy_tree
 import shutil
 import pickle
 import time
-import parametric_ant_utils_classic_ant as parametric_ant_utils
+import parametric_ant_utils_small_ant as parametric_ant_utils
 from matplotlib import pyplot as plt
 from datetime import datetime
 
@@ -24,11 +24,11 @@ from datetime import datetime
 # --- define local path and project name
 # project_name = r'Model3Again'
 simulation_name = 'CST_Model_better_parametric'
-project_name = r'cst_project'
+project_name = r'CST_project'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
-local_path = 'C:\\Users\\Public\\'
+local_path = 'C:\\Users\\User\\Documents\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
@@ -74,7 +74,6 @@ model_parameters = {
 }
 
 ## --- define the model parameters limits for randomization:
-rand_mode = 'normal'  # 'normal' or 'uniform'
 model_parameters_limits = model_parameters.copy()
 for key, value in model_parameters_limits.items():
     if type(value) != str and key != 'type':
@@ -82,13 +81,13 @@ for key, value in model_parameters_limits.items():
             model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['length'] = [50, 150]
-model_parameters_limits['width'] = [10, 100]
-model_parameters_limits['height'] = [10, 100]
-# model_parameters_limits['ady'] = [0.4, 1]
-# model_parameters_limits['ary'] = [0.4, 1]
-# model_parameters_limits['adz'] = [0.4, 1]
-# model_parameters_limits['arz'] = [0.4, 1]
+model_parameters_limits['length'] = [100,250]
+model_parameters_limits['width'] = [10,100]
+model_parameters_limits['height'] = [100, 250]
+# model_parameters_limits['ady'] = [0.2, 1]
+# model_parameters_limits['ary'] = [0.2, 1]
+# model_parameters_limits['adz'] = [0.2, 1]
+# model_parameters_limits['arz'] = [0.2, 1]
 model_parameters_limits['thickness'] = 1
 
 ant_parameters_names = parametric_ant_utils.get_parameters_names()
@@ -126,7 +125,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 130000
+starting_index = 140000
 for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
@@ -165,19 +164,11 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
             while not valid_env:
                 for key, value in model_parameters_limits.items():
                     if type(value) == list:
-                        if rand_mode == 'uniform':
-                            model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
-                        if rand_mode == 'normal':
-                            model_parameters[key] = np.round(np.random.normal((value[0]+value[1])/2,
-                                                                              (value[1]-value[0])/6,),1)
+                        model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
                         # update the changed variables in environment and save the current run as previous
-                        if len(key)==3:
-                            model_parameters[key] = np.max([model_parameters[key], 0.1])
-                            model_parameters[key] = np.min([model_parameters[key], 1])
-                        model_parameters[key] = np.max([model_parameters[key], value[0]])
-                        model_parameters[key] = np.min([model_parameters[key], value[1]])
-                if (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 > 20 and
-                    model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] > 10):
+                        model_parameters[key] = np.max([model_parameters[key], 0.1])
+                if (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 > 50 and
+                    model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] >50):
                     valid_env = 1
             # update model
             for key, value in model_parameters.items():
@@ -239,7 +230,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
             # shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
             #             local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
         print('created antenna... ',end='')
-        """ -------------------------- Rebuild the model and run it ------------------------------------ """
+        """ Rebuild the model and run it """
         project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
         print(' run solver... ',end='')
         try:
