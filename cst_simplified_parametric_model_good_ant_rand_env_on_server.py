@@ -82,7 +82,7 @@ for key, value in model_parameters_limits.items():
             model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['length'] = [50, 150]
+model_parameters_limits['length'] = [30, 130]
 model_parameters_limits['width'] = [10, 100]
 model_parameters_limits['height'] = [10, 100]
 model_parameters_limits['ady'] = [0.4, 1]
