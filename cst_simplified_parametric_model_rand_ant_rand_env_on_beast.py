@@ -76,9 +76,11 @@ model_parameters = {
 ## --- define the model parameters limits for randomization:
 model_parameters_limits = model_parameters.copy()
 for key, value in model_parameters_limits.items():
-    if type(value) == int:
+    if type(value) != str and key != 'type':
         if model_parameters_limits[key]<=1:
             model_parameters_limits[key] = [0, 1]
+            # print(key)
+            # print(model_parameters_limits[key])
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
 model_parameters_limits['length'] = [100,250]
@@ -171,8 +173,8 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
                     model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] >50):
                     valid_env = 1
             # update model
-            for key, value in model_parameters_limits.items():
-                if type(value) == list:
+            for key, value in model_parameters.items():
+                if type(value) != str and key != 'type':
                     # print('U-'+key)
                     VBA_code = r'''Sub Main
                             StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')

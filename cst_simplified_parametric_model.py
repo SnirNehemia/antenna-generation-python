@@ -76,7 +76,7 @@ model_parameters = {
 ## --- define the model parameters limits for randomization:
 model_parameters_limits = model_parameters.copy()
 for key, value in model_parameters_limits.items():
-    if type(value) == int:
+    if type(value) != str and key != 'type':
         if model_parameters_limits[key]<=1:
             model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
@@ -84,10 +84,10 @@ for key, value in model_parameters_limits.items():
 model_parameters_limits['length'] = [50,70]
 model_parameters_limits['width'] = [10,40]
 model_parameters_limits['height'] = [40, 60]
-model_parameters_limits['ady'] = [0.7, 1]
-model_parameters_limits['ary'] = [0.7, 1]
-model_parameters_limits['adz'] = [0.7, 1]
-model_parameters_limits['arz'] = [0.7, 1]
+# model_parameters_limits['ady'] = [0.7, 1]
+# model_parameters_limits['ary'] = [0.7, 1]
+# model_parameters_limits['adz'] = [0.7, 1]
+# model_parameters_limits['arz'] = [0.7, 1]
 model_parameters_limits['thickness'] = 1
 
 ant_parameters_names = parametric_ant_utils.get_parameters_names()
