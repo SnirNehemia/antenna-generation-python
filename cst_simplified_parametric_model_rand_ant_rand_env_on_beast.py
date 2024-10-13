@@ -175,7 +175,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
             # update model
             for key, value in model_parameters.items():
                 if type(value) != str and key != 'type':
-                    print('U-'+key)
+                    # print('U-'+key)
                     VBA_code = r'''Sub Main
                             StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
                             End Sub'''
