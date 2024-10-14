@@ -173,20 +173,20 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
                     model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] >50):
                     valid_env = 1
             # update model
+            VBA_code = 'Sub Main\n'
             for key, value in model_parameters.items():
                 if type(value) != str and key != 'type':
-                    # print('U-'+key)
-                    VBA_code = r'''Sub Main
-                            StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
-                            End Sub'''
-                    project.schematic.execute_vba_code(VBA_code)
+                    VBA_code = VBA_code + f'StoreParameter("{key:s}",{str(model_parameters[key]):s})\n'
+            VBA_code = VBA_code + 'End Sub'
+            project.schematic.execute_vba_code(VBA_code)
         if create_new_models: # for new models
-            ant_parameters = parametric_ant_utils.randomize_ant(ant_parameters_names,model_parameters,seed=run_ID)
+            ant_parameters = parametric_ant_utils.randomize_ant(ant_parameters_names, model_parameters, seed=run_ID)
+            # t0 = time.time()
+            VBA_code = 'Sub Main\n'
             for key, value in ant_parameters.items():
-                VBA_code = r'''Sub Main
-                        StoreParameter("'''+key+'''", '''+str(value)+''')
-                        End Sub'''
-                project.schematic.execute_vba_code(VBA_code)
+                VBA_code = VBA_code + f'StoreParameter("{key:s}",{str(value):s})\n'
+            VBA_code = VBA_code + 'End Sub'
+            project.schematic.execute_vba_code(VBA_code)
             # save picture of the antenna
             parametric_ant_utils.save_figure(model_parameters, ant_parameters, local_path + project_name, run_ID)
             # plt.ioff()
