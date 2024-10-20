@@ -158,7 +158,7 @@ def check_ant_validity(ant_parameters,model_parameters):
             ant_parameters[f'w1y2'] < ant_parameters['fx'] < ant_parameters[f'w1y3'])): return 0
     wings = ['w1', 'w2','w3', 'q1', 'q2','q3']
     for wing in wings:
-        if np.abs(ant_parameters[f'{wing}z0'] - ant_parameters[f'{wing}z1']) < ant_parameters['w'] / Sz: return 0
+        if np.abs(ant_parameters[f'{wing}z0'] - ant_parameters[f'{wing}z1']) <= ant_parameters['w'] / Sz: return 0
     if np.min([ant_parameters[f'q3z0'],ant_parameters[f'w3z0']]) > 0.2: return 0
     return 1
 
