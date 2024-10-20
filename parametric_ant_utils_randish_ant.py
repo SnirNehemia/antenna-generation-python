@@ -61,20 +61,32 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
     valid_ant = 0
     count_retries = 0
     ant_parameters['fx'] = min([abs(np.round(np.random.normal(scale=0.5), decimals=1)),1])
+    Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2
+          - model_parameters['feed_length'] / 2)
+    Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary']
     wing_names = ['w','q']
+    last_z = -1
     while not valid_ant:
         for key in parameters_names:
             ant_parameters[key] = np.max([np.round(np.random.uniform(),decimals=1),0.1])
         for wing_name in wing_names:
             for wing in range(3):
                 wing = wing +1
-                last_z = np.round(np.random.uniform()*0.5,decimals=1)
-                if wing < 3:
-                    sign = +1
-                    last_y = 0.1
+                if Sz > 60:
+                     last_z = min([abs(np.round(np.random.normal(scale=0.5), decimals=1)), 1])
+                     sign_z = -1
                 else:
-                    sign = (-1) ** np.random.randint(2)
-                    last_y = max([min([ant_parameters['fx'] + sign * 0.1, 1]),0])
+                    last_z = np.round(np.random.uniform(),decimals=1)
+                    sign_z = (-1) ** np.random.randint(2)
+                last_y = np.round(np.random.uniform(), decimals=1)
+                sign_y = (-1) ** np.random.randint(2)
+
+                # if wing < 3:
+                #     sign_y = +1
+                #     last_y = 0.1
+                # else:
+                #     sign_y = (-1) ** np.random.randint(2)
+                #     last_y = max([min([ant_parameters['fx'] + sign_y * 0.1, 1]),0])
                 np.round(np.random.uniform(), decimals=1)
 
                 ant_parameters[f'{wing_name}{wing:.0f}z1'] = last_z
@@ -83,20 +95,21 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
                 for sub_wing in range(3):
                     sub_wing = sub_wing + 1
                     if wing==3 and sub_wing==3: continue
-                    last_z = min([last_z + np.round(np.random.uniform()*0.2, 1),1])
-                    ant_parameters[f'{wing_name}{wing:.0f}z{sub_wing:.0f}'] = last_z
-                    if last_y <= 0.1: sign = 1
-                    if last_y >= 0.9: sign = -1
-                    last_y = last_y + sign * 0.1
+                    # last_z = max([min([last_z + np.round(np.random.uniform()*0.2-0.1, 1),1]),0])
+
+                    if last_z <= 0.1: sign_z = 1
+                    if last_z >= 0.9: sign_z = -1
+                    if last_y <= 0.1: sign_y = 1
+                    if last_y >= 0.9: sign_y = -1
+                    last_z = last_z + sign_z * 0.1
+                    last_y = last_y + sign_y * 0.1
                     ant_parameters[f'{wing_name}{wing:.0f}y{sub_wing:.0f}'] = last_y
+                    ant_parameters[f'{wing_name}{wing:.0f}z{sub_wing:.0f}'] = last_z
         # wings = ['w1', 'w2', 'q1', 'q2']
         #     for wing in wings:
         ant_parameters['w'] = np.random.randint(1, 15)
         ant_parameters['q3z0'] = np.round(np.random.uniform(), decimals=1)#np.random.choice([0, 0.1])
         ant_parameters['w3z0'] = np.round(np.random.uniform(), decimals=1)#np.random.choice([0, 0.1])
-        Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
-              - model_parameters['feed_length'] / 2)
-        Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
         for key in parameters_names:
             ant_parameters[key] = np.round(ant_parameters[key], decimals=1)
         valid_ant = check_ant_validity(ant_parameters,model_parameters)
