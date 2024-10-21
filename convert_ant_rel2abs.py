@@ -1,4 +1,5 @@
 
+import numpy as np
 
 def rel2abs(ant_parameters, model_parameters):
     ant_parameters_abs = ant_parameters.copy()
@@ -8,7 +9,9 @@ def rel2abs(ant_parameters, model_parameters):
     for key, value in ant_parameters.items():
         if len(key) == 4:
             if key[2] == 'z':
-                ant_parameters_abs[key] = value * Sz
-            if key[2] == 'y' or key == 'fx':
-                ant_parameters_abs[key] = value * Sy
+                ant_parameters_abs[key] = np.round(value * Sz, decimals=2)
+            if key[2] == 'y':
+                ant_parameters_abs[key] = np.round(value * Sy, decimals=2)
+        if key == 'fx':
+            ant_parameters_abs[key] = np.round(value * Sy, decimals=2)
     return ant_parameters_abs

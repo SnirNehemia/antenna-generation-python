@@ -29,30 +29,9 @@ project_name = r'cst_project'
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
 local_path = 'C:\\Users\\Public\\'
-# --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
-create_new_models = 1  # 1 for creating new models, 0 to use existing ones
-original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
-# --- choose whether to use fix or changed environment
 
-## --- define the model parameters limits for randomization:
-rand_mode = 'normal'  # 'normal' or 'uniform'
-model_parameters_limits = model_parameters.copy()
-for key, value in model_parameters_limits.items():
-    if type(value) != str and key != 'type':
-        if model_parameters_limits[key]<=1:
-            model_parameters_limits[key] = [0, 1]
-# EXAMPLE for a costum parameter
-# model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['length'] = [50, 150]
-model_parameters_limits['width'] = [10, 100]
-model_parameters_limits['height'] = [10, 100]
-# model_parameters_limits['ady'] = [0.4, 1]
-# model_parameters_limits['ary'] = [0.4, 1]
-# model_parameters_limits['adz'] = [0.4, 1]
-# model_parameters_limits['arz'] = [0.4, 1]
-model_parameters_limits['thickness'] = 1
 
-ant_parameters_names = parametric_ant_utils.get_parameters_names()
+# ant_parameters_names = parametric_ant_utils.get_parameters_names()
 
 
 """ create all tree folder paths """
@@ -88,7 +67,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
 cst_time = time.time()
 # TODO: if you want, you may write a for loop here.
-
+ant_ID = 0
 
 # TODO:
 """ LOAD HERE:
@@ -96,6 +75,8 @@ cst_time = time.time()
  do it as you got them - as a dictionary!
  add a parameter ant_ID to save it to a different file (so your results won't overwrite each other)"""
 
+ant_path = r"C:\Users\Public\cst_project\output\models\136892\ant_parameters.pickle"
+model_path = r"C:\Users\Public\cst_project\output\models\136892\model_parameters.pickle"
 
 file = open(model_path, 'rb')
 model_parameters = pickle.load(file)
@@ -222,6 +203,8 @@ VBA_code = r'''Sub Main
 project.schematic.execute_vba_code(VBA_code)
 # now copy:
 target_STEP_folder = models_path + '\\' + str(ant_ID)
+if not os.path.exists(target_STEP_folder):
+    os.makedirs(target_STEP_folder)
 for filename in os.listdir(STEP_source_path):
     if filename.endswith('.stp'):
         shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
