@@ -85,6 +85,9 @@ for key, value in model_parameters_limits.items():
 model_parameters_limits['length'] = [50, 150]
 model_parameters_limits['width'] = [10, 100]
 model_parameters_limits['height'] = [10, 100]
+model_parameters_limits['a'] = [0.1, 0.9]
+model_parameters_limits['b'] = [0.1, 0.9]
+model_parameters_limits['c'] = [0.1, 0.9]
 # model_parameters_limits['ady'] = [0.4, 1]
 # model_parameters_limits['ary'] = [0.4, 1]
 # model_parameters_limits['adz'] = [0.4, 1]
@@ -177,7 +180,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
                         model_parameters[key] = np.max([model_parameters[key], value[0]])
                         model_parameters[key] = np.min([model_parameters[key], value[1]])
                 if (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 > 20 and
-                    model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] > 10):
+                    model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] > 15):
                     valid_env = 1
             # update model
             for key, value in model_parameters.items():
