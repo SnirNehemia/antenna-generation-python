@@ -84,6 +84,9 @@ for key, value in model_parameters_limits.items():
 model_parameters_limits['length'] = [100,250]
 model_parameters_limits['width'] = [10,100]
 model_parameters_limits['height'] = [100, 250]
+model_parameters_limits['a'] = [0.1, 0.9]
+model_parameters_limits['b'] = [0.1, 0.9]
+model_parameters_limits['c'] = [0.1, 0.9]
 # model_parameters_limits['ady'] = [0.2, 1]
 # model_parameters_limits['ary'] = [0.2, 1]
 # model_parameters_limits['adz'] = [0.2, 1]
@@ -125,7 +128,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 140000
+starting_index = 160000
 for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
