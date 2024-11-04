@@ -67,191 +67,194 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
 cst_time = time.time()
 # TODO: if you want, you may write a for loop here.
-ant_ID = 0
+antennas_names = ['130767']
+for ant_name in antennas_names:
+    model_path = fr"C:\Users\Public\cst_project\output_moshe\generated\env_{ant_name}.pickle"
+    for grade in ['grade_0', 'grade_1', 'grade_2', 'gt']:
+        ant_ID = f'{ant_name}_{grade}'
+        ant_path = fr"C:\Users\Public\cst_project\output_moshe\generated\ant_{ant_ID}.pickle"
+        print(f'Working on antenna in path: {ant_path} ')
+        # TODO:
+        """ LOAD HERE:
+         model_parameters and antenna_parameters
+         do it as you got them - as a dictionary!
+         add a parameter ant_ID to save it to a different file (so your results won't overwrite each other)"""
 
-# TODO:
-""" LOAD HERE:
- model_parameters and antenna_parameters
- do it as you got them - as a dictionary!
- add a parameter ant_ID to save it to a different file (so your results won't overwrite each other)"""
 
-ant_path = r"C:\Users\Public\cst_project\output\models\136892\ant_parameters.pickle"
-model_path = r"C:\Users\Public\cst_project\output\models\136892\model_parameters.pickle"
+        file = open(model_path, 'rb')
+        model_parameters = pickle.load(file)
+        file.close()
 
-file = open(model_path, 'rb')
-model_parameters = pickle.load(file)
-file.close()
+        file = open(ant_path, 'rb')
+        ant_parameters = pickle.load(file)
+        file.close()
 
-file = open(ant_path, 'rb')
-ant_parameters = pickle.load(file)
-file.close()
+        # Delete files in the CST folder to prevent errors
+        target_SPI_folder =final_dir + "\\" + simulation_name +"\\Result"
+        for filename in os.listdir(target_SPI_folder):
+            if filename.endswith('.spi'):
+                os.remove(target_SPI_folder +"\\" + filename)
+        target_delete_folder = final_dir + "\\" + simulation_name +"\\Model\\3D"
+        for filename in os.listdir(target_delete_folder):
+            if filename.endswith('.stp') or filename.endswith('.stl') or filename.endswith('.hlg'):
+                os.remove(target_delete_folder +"\\" + filename)
+        target_delete_folder = final_dir + "\\" + simulation_name +"\\Export\\Farfield"
+        if os.path.isdir(target_delete_folder):
+            for filename in os.listdir(target_delete_folder):
+                if filename.endswith('.txt'):
+                    os.remove(target_delete_folder +"\\" + filename)
+        print('deleted SPI, models and results... ', end='')
+        # Determine env parameter by adjusting model_parameters values
 
-# Delete files in the CST folder to prevent errors
-target_SPI_folder =final_dir + "\\" + simulation_name +"\\Result"
-for filename in os.listdir(target_SPI_folder):
-    if filename.endswith('.spi'):
-        os.remove(target_SPI_folder +"\\" + filename)
-target_delete_folder = final_dir + "\\" + simulation_name +"\\Model\\3D"
-for filename in os.listdir(target_delete_folder):
-    if filename.endswith('.stp') or filename.endswith('.stl') or filename.endswith('.hlg'):
-        os.remove(target_delete_folder +"\\" + filename)
-target_delete_folder = final_dir + "\\" + simulation_name +"\\Export\\Farfield"
-if os.path.isdir(target_delete_folder):
-    for filename in os.listdir(target_delete_folder):
-        if filename.endswith('.txt'):
-            os.remove(target_delete_folder +"\\" + filename)
-print('deleted SPI, models and results... ', end='')
-# Determine env parameter by adjusting model_parameters values
+        # update model
+        for key, value in model_parameters.items():
+            if type(value) != str and key != 'type':
+                # print('U-'+key)
+                VBA_code = r'''Sub Main
+                        StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
+                        End Sub'''
+                project.schematic.execute_vba_code(VBA_code)
 
-# update model
-for key, value in model_parameters.items():
-    if type(value) != str and key != 'type':
-        # print('U-'+key)
-        VBA_code = r'''Sub Main
-                StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
-                End Sub'''
-        project.schematic.execute_vba_code(VBA_code)
-        
 
-for key, value in ant_parameters.items():
-    VBA_code = r'''Sub Main
-            StoreParameter("'''+key+'''", '''+str(value)+''')
-            End Sub'''
-    project.schematic.execute_vba_code(VBA_code)
-# save picture of the antenna
-parametric_ant_utils.save_figure(model_parameters, ant_parameters, local_path + project_name, ant_ID)
-        
-            
-""" -------------------------- Rebuild the model and run it ------------------------------------ """
-project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
-print(' run solver... ',end='')
-try:
-    project.model3d.run_solver()
-    print(' finished simulation... ', end='')
-    succeed = 1
-except Exception as error:
-    # handle the exception
-    print("An exception occurred:", error)  # An exception occurred
-    exc_type, exc_obj, exc_tb = sys.exc_info()
-    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    print('\n\n', exc_type, fname, exc_tb.tb_lineno, '\n\n')
-    print('there was an error with the run!')
+        for key, value in ant_parameters.items():
+            VBA_code = r'''Sub Main
+                    StoreParameter("'''+key+'''", '''+str(value)+''')
+                    End Sub'''
+            project.schematic.execute_vba_code(VBA_code)
+        # save picture of the antenna
+        parametric_ant_utils.save_figure(model_parameters, ant_parameters, local_path + project_name, ant_ID)
 
-""" access results """
-S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
-S11 = np.array(S_results.get_ydata())
-freq = np.array(S_results.get_xdata())
-print(' got S11, ', end='')
-radiation_efficiency_results = results.get_3d().get_result_item(r"1D Results\Efficiencies\Rad. Efficiency [1]")
-radiation_efficiency = np.array(radiation_efficiency_results.get_ydata())
-freq_efficiency = np.array(radiation_efficiency_results.get_xdata())
-total_efficiency_results = results.get_3d().get_result_item(r"1D Results\Efficiencies\Tot. Efficiency [1]")
-total_efficiency = np.array(total_efficiency_results.get_ydata())
-print(' got efficiencies, ', end='')
-# the farfield will be exported using post-proccessing methods and it should be moved to a designated location and renamed
-print(' got results... ',end='')
 
-# save the farfield
-copy_tree(pattern_source_path, results_path + '\\' + str(ant_ID))
+        """ -------------------------- Rebuild the model and run it ------------------------------------ """
+        project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
+        print(' run solver... ',end='')
+        try:
+            project.model3d.run_solver()
+            print(' finished simulation... ', end='')
+            succeed = 1
+        except Exception as error:
+            # handle the exception
+            print("An exception occurred:", error)  # An exception occurred
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print('\n\n', exc_type, fname, exc_tb.tb_lineno, '\n\n')
+            print('there was an error with the run!')
 
-# TODO: save the DXFs too in 3 seperate files. try to also save the picture of the ant!
-#  maybe after we save it we can load it with ezdxf and then print it in the same way.
-# save and copy the STEP model:
-# save:
-for file_name in file_names:
-    VBA_code = r'''Sub Main
-    SelectTreeItem("Components'''+'\\'+file_name+r'''")
-        Dim path As String
-        Path = "./'''+file_name+'''_STEP.stp"
-        With STEP
-            .Reset
-            .FileName(path)
-            .WriteSelectedSolids
-        End With
-    End Sub'''
-    project.schematic.execute_vba_code(VBA_code)
-    VBA_code = r'''Sub Main
-            SelectTreeItem("Components''' + '\\' + file_name + r'''")
+        """ access results """
+        S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
+        S11 = np.array(S_results.get_ydata())
+        freq = np.array(S_results.get_xdata())
+        print(' got S11, ', end='')
+        radiation_efficiency_results = results.get_3d().get_result_item(r"1D Results\Efficiencies\Rad. Efficiency [1]")
+        radiation_efficiency = np.array(radiation_efficiency_results.get_ydata())
+        freq_efficiency = np.array(radiation_efficiency_results.get_xdata())
+        total_efficiency_results = results.get_3d().get_result_item(r"1D Results\Efficiencies\Tot. Efficiency [1]")
+        total_efficiency = np.array(total_efficiency_results.get_ydata())
+        print(' got efficiencies, ', end='')
+        # the farfield will be exported using post-proccessing methods and it should be moved to a designated location and renamed
+        print(' got results... ',end='')
+
+        # save the farfield
+        copy_tree(pattern_source_path, results_path + '\\' + str(ant_ID))
+
+        # TODO: save the DXFs too in 3 seperate files. try to also save the picture of the ant!
+        #  maybe after we save it we can load it with ezdxf and then print it in the same way.
+        # save and copy the STEP model:
+        # save:
+        for file_name in file_names:
+            VBA_code = r'''Sub Main
+            SelectTreeItem("Components'''+'\\'+file_name+r'''")
                 Dim path As String
-                Path = "./''' + file_name + '''_STL.stl"
+                Path = "./'''+file_name+'''_STEP.stp"
                 With STEP
                     .Reset
                     .FileName(path)
                     .WriteSelectedSolids
                 End With
             End Sub'''
-    project.schematic.execute_vba_code(VBA_code)
-VBA_code = r'''Sub Main
-    Dim path As String
-    Path = "./Whole_Model_STEP.stp"
-    With STEP
-        .Reset
-        .FileName(path)
-        .WriteAll
-    End With
-End Sub'''
-project.schematic.execute_vba_code(VBA_code)
-VBA_code = r'''Sub Main
-        Dim path As String
-        Path = "./Whole_Model_STL.stl"
-        With STEP
-            .Reset
-            .FileName(path)
-            .WriteAll
-        End With
-    End Sub'''
-project.schematic.execute_vba_code(VBA_code)
-# now copy:
-target_STEP_folder = models_path + '\\' + str(ant_ID)
-if not os.path.exists(target_STEP_folder):
-    os.makedirs(target_STEP_folder)
-for filename in os.listdir(STEP_source_path):
-    if filename.endswith('.stp'):
-        shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
-    if filename.endswith('.stl'):
-        shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
-    if filename.endswith('.hlg'):
-        shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
-# save parameters of model and environment
-file_name = models_path + '\\' + str(ant_ID) + '\\model_parameters.pickle'
-file = open(file_name, 'wb')
-pickle.dump(model_parameters, file)
-file.close()
-file_name = models_path + '\\' + str(ant_ID) + '\\ant_parameters.pickle'
-file = open(file_name, 'wb')
-pickle.dump(ant_parameters, file)
-file.close()
-# save picture of the S11
-plt.ioff()
-f, ax1 = plt.subplots()
-ax1.plot(freq, 20 * np.log10(np.abs(S11)))  # TODO: I fixed it here!
-ax1.set_ylim(ymin=-20, ymax=0)
-ax1.set_ylabel('|S11|', color='C0')
-ax1.tick_params(axis='y', color='C0', labelcolor='C0')
-ax2 = ax1.twinx()
-ax2.plot(freq, np.angle(S11), 'C1')
-ax2.set_ylim(ymin=-np.pi, ymax=np.pi)
-ax2.set_ylabel('phase [rad]', color='C1')
-ax2.tick_params(axis='y', color='C1', labelcolor='C1')
-plt.title('S parameters')
-plt.show(block=False)
-f.savefig(save_S11_pic_dir + r'\S_parameters_' + str(ant_ID) + '.png')
-plt.close(f)
+            project.schematic.execute_vba_code(VBA_code)
+            VBA_code = r'''Sub Main
+                    SelectTreeItem("Components''' + '\\' + file_name + r'''")
+                        Dim path As String
+                        Path = "./''' + file_name + '''_STL.stl"
+                        With STEP
+                            .Reset
+                            .FileName(path)
+                            .WriteSelectedSolids
+                        End With
+                    End Sub'''
+            project.schematic.execute_vba_code(VBA_code)
+        VBA_code = r'''Sub Main
+            Dim path As String
+            Path = "./Whole_Model_STEP.stp"
+            With STEP
+                .Reset
+                .FileName(path)
+                .WriteAll
+            End With
+        End Sub'''
+        project.schematic.execute_vba_code(VBA_code)
+        VBA_code = r'''Sub Main
+                Dim path As String
+                Path = "./Whole_Model_STL.stl"
+                With STEP
+                    .Reset
+                    .FileName(path)
+                    .WriteAll
+                End With
+            End Sub'''
+        project.schematic.execute_vba_code(VBA_code)
+        # now copy:
+        target_STEP_folder = models_path + '\\' + str(ant_ID)
+        if not os.path.exists(target_STEP_folder):
+            os.makedirs(target_STEP_folder)
+        for filename in os.listdir(STEP_source_path):
+            if filename.endswith('.stp'):
+                shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
+            if filename.endswith('.stl'):
+                shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
+            if filename.endswith('.hlg'):
+                shutil.copy(STEP_source_path + '\\' + filename, target_STEP_folder)
+        # save parameters of model and environment
+        file_name = models_path + '\\' + str(ant_ID) + '\\model_parameters.pickle'
+        file = open(file_name, 'wb')
+        pickle.dump(model_parameters, file)
+        file.close()
+        file_name = models_path + '\\' + str(ant_ID) + '\\ant_parameters.pickle'
+        file = open(file_name, 'wb')
+        pickle.dump(ant_parameters, file)
+        file.close()
+        # save picture of the S11
+        plt.ioff()
+        f, ax1 = plt.subplots()
+        ax1.plot(freq, 20 * np.log10(np.abs(S11)))  # TODO: I fixed it here!
+        ax1.set_ylim(ymin=-20, ymax=0)
+        ax1.set_ylabel('|S11|', color='C0')
+        ax1.tick_params(axis='y', color='C0', labelcolor='C0')
+        ax2 = ax1.twinx()
+        ax2.plot(freq, np.angle(S11), 'C1')
+        ax2.set_ylim(ymin=-np.pi, ymax=np.pi)
+        ax2.set_ylabel('phase [rad]', color='C1')
+        ax2.tick_params(axis='y', color='C1', labelcolor='C1')
+        plt.title('S parameters')
+        plt.show(block=False)
+        f.savefig(save_S11_pic_dir + r'\S_parameters_' + str(ant_ID) + '.png')
+        plt.close(f)
 
-# save the S parameters data
-file_name = results_path + '\\' + str(ant_ID) + '\\S_parameters.pickle'
-file = open(file_name, 'wb')
-pickle.dump([S11, freq], file)
-file.close()
-# save the efficiencies data
-file_name = results_path + '\\' + str(ant_ID) + '\\Efficiency.pickle'
-file = open(file_name, 'wb')
-pickle.dump([total_efficiency, radiation_efficiency, freq_efficiency], file)
-file.close()
+        # save the S parameters data
+        file_name = results_path + '\\' + str(ant_ID) + '\\S_parameters.pickle'
+        file = open(file_name, 'wb')
+        pickle.dump([S11, freq], file)
+        file.close()
+        # save the efficiencies data
+        file_name = results_path + '\\' + str(ant_ID) + '\\Efficiency.pickle'
+        file = open(file_name, 'wb')
+        pickle.dump([total_efficiency, radiation_efficiency, freq_efficiency], file)
+        file.close()
 
-print('saved results. ')
-print(f'\t RUNTIME for #{ant_ID:.0f}:\n\t\t ant #{ant_ID:.0f} time: {(time.time()-cst_time)/60:.1f} min \n\t\t overall time: {(time.time()-overall_sim_time)/60/60:.2f} hours')
-print(f'\t\t average time: {(time.time() - overall_sim_time) / ants_count/60: .1f} min')
+        print('saved results. ')
+        # print(f'\t RUNTIME for #{ant_ID:.0f}:\n\t\t ant #{ant_ID:.0f} time: {(time.time()-cst_time)/60:.1f} min \n\t\t overall time: {(time.time()-overall_sim_time)/60/60:.2f} hours')
+        # print(f'\t\t average time: {(time.time() - overall_sim_time) / ants_count/60: .1f} min')
 
 
 
