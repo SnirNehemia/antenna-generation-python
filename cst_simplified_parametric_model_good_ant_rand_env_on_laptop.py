@@ -1,6 +1,8 @@
 import os
 import sys
 # sys.path.append(r"C:\Program Files\Dassault Systemes\B426CSTEmagConnector\CSTStudio\AMD64\python_cst_libraries")
+
+# TODO: change directory to cst's python library
 sys.path.append(r"C:\Program Files (x86)\CST Studio Suite 2024\AMD64\python_cst_libraries")
 
 import cst
@@ -16,64 +18,73 @@ from distutils.dir_util import copy_tree
 import shutil
 import pickle
 import time
-import parametric_ant_utils_randish_ant as parametric_ant_utils
+import parametric_ant_utils_classic_ant as parametric_ant_utils
 from matplotlib import pyplot as plt
 from datetime import datetime
 
-""" define run parameters """
+def define_env_parameters():
+    model_parameters = {
+        'type': 3,
+        'plane': 'yz-flipped',  # changetoyz-flipped
+        # parametersthatchangeboththeantennaandtheenviroment
+        'width': 10,  # coordinatealongthex(red)axis
+        'height': 50,
+        'length': 60,  # coordinatealongthev(green)axis
+        'thickness': 1,
+        'adx': 0.9,
+        'arx': 0.9,
+        'ady': 0.9,
+        'ary': 0.85,
+        'adz': 0.9,
+        'arz': 0.9,
+        'a': 0.6,
+        'b': 0.8,
+        'c': 0.8,
+        'bdx': 1,
+        'brx': 0.2,
+        'bdy': 0.8,
+        'bry': 0.75,
+        'bdz': 0.8,
+        'brz': 0.75,
+        'cdx': 1,
+        'crx': 0.3,
+        'cdy': 0.8,
+        'cry': 0.75,
+        'cdz': 0.8,
+        'crz': 0.75,
+        'ddx': 1,
+        'drx': 1,
+        'ddy': 0.8,
+        'dry': 0.75,
+        'ddz': 1,
+        'drz': 1,
+        'feed_length': 2
+    }
+    return model_parameters
+
+""" define run parameters """ # TODO: modify to direct it to your simulation model
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_better_parametric'
-project_name = r'CST_project'
-# local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
-# local_path = 'C:\\Users\\Public\\'
-# local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
-local_path = 'C:\\Users\\User\\Documents\\'
+simulation_name = 'CST_Model_better_parametric'  # name of the cst simulation file
+project_name = r'cst_project'  # name of the parent folder
+local_path = 'C:\\Users\\Public\\'  # path to parent folder
+starting_index = 130000
+simulation_amount = 10000
+
+""" LEGACY - may be useful for Avi """
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
 # --- choose whether to use fix or changed environment
 change_env = 1
+use_anchor_env = 0  # not yet supported option
 
-model_parameters = {
-    'type':3,
-    'plane':'yz-flipped',#changetoyz-flipped
-    #parametersthatchangeboththeantennaandtheenviroment
-    'width':10,#coordinatealongthex(red)axis
-    'height': 50,
-    'length':60,#coordinatealongthev(green)axis
-    'thickness':1,
-    'adx':0.9,
-    'arx':0.9,
-    'ady': 0.9,
-    'ary': 0.85,
-    'adz':0.9,
-    'arz':0.9,
-    'a':0.6,
-    'b':0.8,
-    'c':0.8,
-    'bdx':1,
-    'brx':0.2,
-    'bdy':0.8,
-    'bry':0.75,
-    'bdz':0.8,
-    'brz':0.75,
-    'cdx':1,
-    'crx':0.3,
-    'cdy':0.8,
-    'cry':0.75,
-    'cdz':0.8,
-    'crz':0.75,
-    'ddx':1,
-    'drx':1,
-    'ddy':0.8,
-    'dry':0.75,
-    'ddz':1,
-    'drz':1,
-    'feed_length':2
-}
 
-## --- define the model parameters limits for randomization:
+""" define the model parameters limits for randomization: """
+# define model parameters
+model_parameters = define_env_parameters()  # TODO: define the parameters of your model and its limits
+
+rand_mode = 'uniform'  # 'normal' or 'uniform'
 model_parameters_limits = model_parameters.copy()
 for key, value in model_parameters_limits.items():
     if type(value) != str and key != 'type':
@@ -81,22 +92,24 @@ for key, value in model_parameters_limits.items():
             model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['length'] = [40,200]
-model_parameters_limits['width'] = [10,100]
-model_parameters_limits['height'] = [40, 200]
+model_parameters_limits['length'] = [50, 150]
+model_parameters_limits['width'] = [10, 100]
+model_parameters_limits['height'] = [10, 100]
 model_parameters_limits['a'] = [0.1, 0.9]
 model_parameters_limits['b'] = [0.1, 0.9]
 model_parameters_limits['c'] = [0.1, 0.9]
-# model_parameters_limits['ady'] = [0.2, 1]
-# model_parameters_limits['ary'] = [0.2, 1]
-# model_parameters_limits['adz'] = [0.2, 1]
-# model_parameters_limits['arz'] = [0.2, 1]
+# model_parameters_limits['ady'] = [0.4, 1]
+# model_parameters_limits['ary'] = [0.4, 1]
+# model_parameters_limits['adz'] = [0.4, 1]
+# model_parameters_limits['arz'] = [0.4, 1]
 model_parameters_limits['thickness'] = 1
 
+# get antenna parameters
 ant_parameters_names = parametric_ant_utils.get_parameters_names()
 
+""" DO NOT CHANGE FROM HERE ON! """
 
-""" create all tree folder paths """
+""" create all tree folder paths  """
 # --- from here on I define the paths based on the manually defined project and local path ---
 final_dir = local_path + project_name
 project_path = final_dir + "\\" + simulation_name + ".cst"
@@ -108,7 +121,7 @@ pattern_source_path = (final_dir+"\\" + simulation_name +
 save_S11_pic_dir = final_dir+"\\output\\S11_pictures"
 STEP_source_path = (final_dir+"\\" + simulation_name +
                   r'\Model\3D')
-# --- for export STLs
+# --- for STLs export
 file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
               'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
 
@@ -128,8 +141,8 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 190000
-for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problematic!
+
+for run_ID_local in range(0, simulation_amount):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
             run_ID) + '.png'):  # os.path.isdir(models_path + '\\' + str(run_ID)):
@@ -162,17 +175,40 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
         # Determine env parameter by adjusting model_parameters values
         if change_env:
             np.random.seed(run_ID)
-            # randomize environment
-            valid_env = 0
-            while not valid_env:
+            if use_anchor_env:  # TODO: this option is not supported yet
+                # env_path = np.random.choose(env_option)
+                # TODO: load env_path
+                # TODO: add little gaussian variation for the parameters
                 for key, value in model_parameters_limits.items():
-                    if type(value) == list:
-                        model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
-                        # update the changed variables in environment and save the current run as previous
+                    model_parameters[key] = np.round(model_parameters[key] + np.random.normal(1,1),1) # TODO: adjust normal distribution
+                    if len(key) == 3:
                         model_parameters[key] = np.max([model_parameters[key], 0.1])
+                        model_parameters[key] = np.min([model_parameters[key], 1])
+                    model_parameters[key] = np.max([model_parameters[key], value[0]])
+                    model_parameters[key] = np.min([model_parameters[key], value[1]])
                 if (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 > 20 and
-                    model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] >20):
+                        model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] > 15):
                     valid_env = 1
+            else:
+                # randomize environment
+                valid_env = 0
+                while not valid_env:
+                    for key, value in model_parameters_limits.items():
+                        if type(value) == list:
+                            if rand_mode == 'uniform':
+                                model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
+                            if rand_mode == 'normal':
+                                model_parameters[key] = np.round(np.random.normal((value[0]+value[1])/2,
+                                                                                  (value[1]-value[0])/6),1)
+                            # update the changed variables in environment and save the current run as previous
+                            if len(key)==3:
+                                model_parameters[key] = np.max([model_parameters[key], 0.1])
+                                model_parameters[key] = np.min([model_parameters[key], 1])
+                            model_parameters[key] = np.max([model_parameters[key], value[0]])
+                            model_parameters[key] = np.min([model_parameters[key], value[1]])
+                    if (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 > 20 and
+                        model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] > 15):
+                        valid_env = 1
             # update model
             for key, value in model_parameters.items():
                 if type(value) != str and key != 'type':
@@ -181,7 +217,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
                             StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
                             End Sub'''
                     project.schematic.execute_vba_code(VBA_code)
-        if create_new_models: # for new models
+        if create_new_models:  # for new models
             ant_parameters = parametric_ant_utils.randomize_ant(ant_parameters_names,model_parameters,seed=run_ID)
             for key, value in ant_parameters.items():
                 VBA_code = r'''Sub Main
@@ -190,53 +226,12 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
                 project.schematic.execute_vba_code(VBA_code)
             # save picture of the antenna
             parametric_ant_utils.save_figure(model_parameters, ant_parameters, local_path + project_name, run_ID)
-            # plt.ioff()
-            # f, ax1 = plt.subplots()
-            # wings = ['w1', 'w2', 'q1', 'q2']
-            # Sz = (model_parameters['length'] * model_parameters['adz']* model_parameters['arz']/2-ant_parameters['w']/2
-            #       - model_parameters['feed_length']/2)
-            # Sy = model_parameters['height'] * model_parameters['ady']* model_parameters['ary']-ant_parameters['w']
-            # data_linewidth_plot([0,0], [model_parameters['feed_length']/2,-model_parameters['feed_length']/2],
-            #                         linewidth=ant_parameters['w'], alpha=0.4, color='r')
-            # for wing in wings:
-            #     z = [model_parameters['feed_length']/2]
-            #     y = [0,0]
-            #     for i1 in range(3):
-            #         z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
-            #         z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
-            #         y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
-            #         y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
-            #     y.pop()
-            #     data_linewidth_plot(y, z,
-            #                             linewidth=ant_parameters['w'], alpha=0.4, color='b')
-            # wings = ['w3', 'q3']
-            # for wing in wings:
-            #     z = [model_parameters['feed_length'] / 2]
-            #     y = [0, 0]
-            #     z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
-            #     z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
-            #     y.append(Sy * ant_parameters[f'{wing}y{1:d}'])
-            #     data_linewidth_plot(y, z,
-            #                         linewidth=ant_parameters['w'], alpha=0.4, color='b')
-            #     plt.title('dimensions in mm')
-            #     plt.show(block=False)
-            #     f.savefig(local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
-            #     plt.close(f)
-        else: # for existing models
-            print('not supported yet')
-            # original_model_path = original_models_path + '\\models\\' + str(run_ID_local)
-            # curr_model_path = models_path
-            # for filename in os.listdir(original_model_path):
-            #     if filename.endswith('.dxf'):
-            #         shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID))
-            #         shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model')
-            # shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
-            #             local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
+
         print('created antenna... ',end='')
-        """ Rebuild the model and run it """
+        """ -------------------------- Rebuild the model and run it ------------------------------------ """
         project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
         print(' run solver... ',end='')
-        try:
+        try:  # in case of some error in the simulation - license error and such
             project.model3d.run_solver()
             print(' finished simulation... ', end='')
             succeed = 1
@@ -274,7 +269,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
     """ access results """
     if not succeed:
         print('Did not succeed, continue to next iteration.')
-        continue # will immediately start next id
+        continue  # will immediately start next id
     S_results = results.get_3d().get_result_item(r"1D Results\S-Parameters\S1,1")
     S11 = np.array(S_results.get_ydata())
     freq = np.array(S_results.get_xdata())
@@ -291,8 +286,6 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
     # save the farfield
     copy_tree(pattern_source_path, results_path + '\\' + str(run_ID))
 
-    # TODO: save the DXFs too in 3 seperate files. try to also save the picture of the ant!
-    #  maybe after we save it we can load it with ezdxf and then print it in the same way.
     # save and copy the STEP model:
     # save:
     for file_name in file_names:
@@ -359,7 +352,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
     # save picture of the S11
     plt.ioff()
     f, ax1 = plt.subplots()
-    ax1.plot(freq, 20 * np.log10(np.abs(S11)))
+    ax1.plot(freq, 10 * np.log10(np.abs(S11)))
     ax1.set_ylim(ymin=-20, ymax=0)
     ax1.set_ylabel('|S11|', color='C0')
     ax1.tick_params(axis='y', color='C0', labelcolor='C0')

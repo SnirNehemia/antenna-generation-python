@@ -25,9 +25,9 @@ def copy_spectrum(idx):
     shutil.copy(src_file_rad, dst_file_rad)
     shutil.copy(src_file_gamma, dst_file_gamma)
     print(f'Successfully saved for antenna #{idx} ')
-if __name__ == "__main__":
-    idx_start, idx_end = 10000, 20000
-    for idx in range(idx_start, idx_end):
+# if __name__ == "__main__":
+#     idx_start, idx_end = 10000, 20000
+#     for idx in range(idx_start, idx_end):
 
         # copy_spectrum(idx)
 
