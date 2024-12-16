@@ -34,6 +34,37 @@ class data_linewidth_plot():
         self.timer.start()
 
 
+# def add_curve(cst, p1, p2, count):
+#     vba_curve = f"""With Polygon
+#          .Reset
+#          .Name "polygon1"
+#          .Curve "curve2"
+#          .Point "Sz*{p1[0]:s}", "Sy*{p1[1]:s}"
+#          .LineTo "Sz*{p2[0]:s}", "Sy*{p2[1]:s}"
+#          .Create
+#         End With """
+#     vba_solid = f"""With TraceFromCurve
+#          .Reset
+#          .Name "solid{str(count):s}"
+#          .Component "Antenna"
+#          .Material "PEC"
+#          .Curve "curve2:polygon1"
+#          .Thickness "0"
+#          .Width "w"
+#          .RoundStart "False"
+#          .RoundEnd "False"
+#          .DeleteCurve "True"
+#          .GapType "2"
+#          .Create
+#         End With"""
+#     cst.add_to_history(f'create curve {str(count)}', vba_curve)
+#     cst.add_to_history(f'create solid {str(count)}', vba_solid)
+#
+# def create_ant(cst):
+#     # wings = [1,2,3]
+#     # subwings = [1,2,3,4]
+#     # sides = ['w','q']
+#     curves_list = [['']]
 
 
 def get_parameters_names():
@@ -60,64 +91,63 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
         np.random.seed(seed)
     valid_ant = 0
     count_retries = 0
-    ant_parameters['fx'] = min([abs(np.round(np.random.normal(scale=0.5), decimals=1)),1])
-    Sz = (model_parameters['Sz'] * model_parameters['adz'] * model_parameters['arz'] / 2
-          - model_parameters['feed_length'] / 2)
-    Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary']
-    wing_names = ['w','q']
-    last_z = -1
+    ant_parameters['fx'] = np.round(np.random.uniform(), decimals=1)
     while not valid_ant:
         for key in parameters_names:
             ant_parameters[key] = np.max([np.round(np.random.uniform(),decimals=1),0.1])
-        for wing_name in wing_names:
-            for wing in range(3):
-                wing = wing +1
-                if Sz > 60:
-                     last_z = min([abs(np.round(np.random.normal(scale=0.5), decimals=1)), 1])
-                     sign_z = -1
-                else:
-                    last_z = np.round(np.random.uniform(),decimals=1)
-                    sign_z = (-1) ** np.random.randint(2)
-                last_y = np.round(np.random.uniform(), decimals=1)
-                sign_y = (-1) ** np.random.randint(2)
-
-                # if wing < 3:
-                #     sign_y = +1
-                #     last_y = 0.1
-                # else:
-                #     sign_y = (-1) ** np.random.randint(2)
-                #     last_y = max([min([ant_parameters['fx'] + sign_y * 0.1, 1]),0])
-                np.round(np.random.uniform(), decimals=1)
-
-                ant_parameters[f'{wing_name}{wing:.0f}z1'] = last_z
-                ant_parameters[f'{wing_name}{wing:.0f}y1'] = last_y
-
-                for sub_wing in range(3):
-                    sub_wing = sub_wing + 1
-                    if wing==3 and sub_wing==3: continue
-                    # last_z = max([min([last_z + np.round(np.random.uniform()*0.2-0.1, 1),1]),0])
-
-                    if last_z <= 0.1: sign_z = 1
-                    if last_z >= 0.9: sign_z = -1
-                    if last_y <= 0.1: sign_y = 1
-                    if last_y >= 0.9: sign_y = -1
-                    last_z = last_z + sign_z * 0.1
-                    last_y = last_y + sign_y * 0.1
-                    ant_parameters[f'{wing_name}{wing:.0f}y{sub_wing:.0f}'] = last_y
-                    ant_parameters[f'{wing_name}{wing:.0f}z{sub_wing:.0f}'] = last_z
-        # wings = ['w1', 'w2', 'q1', 'q2']
-        #     for wing in wings:
         ant_parameters['w'] = np.random.randint(1, 15)
-        ant_parameters['q3z0'] = np.round(np.random.uniform(), decimals=1)#np.random.choice([0, 0.1])
-        ant_parameters['w3z0'] = np.round(np.random.uniform(), decimals=1)#np.random.choice([0, 0.1])
-        for key in parameters_names:
-            ant_parameters[key] = np.round(ant_parameters[key], decimals=1)
-        valid_ant = check_ant_validity(ant_parameters,model_parameters)
+        ant_parameters['q1z3'] = np.round(np.random.uniform(),decimals=1)
+        ant_parameters['w1z3'] = np.round(np.random.uniform(), decimals=1)
+        # Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
+        #       - model_parameters['feed_length'] / 2)
+        # Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
+        # valid_ant = check_ant_validity(ant_parameters,Sz,Sy)
+        valid_ant = check_ant_validity(ant_parameters, model_parameters)
         count_retries += 1
         if count_retries%1000 == 0:
             print(f'retried {count_retries:d} times, trying some more')
     print(f'retried {count_retries:d} times')
     return ant_parameters
+
+# def check_ant_validity(ant_parameters,Sz,Sy):
+#     wings = ['w1','w2','q1','q2']
+#     for wing in wings:
+#         if (ant_parameters[f'{wing}z3'] > ant_parameters[f'{wing}z1'] > ant_parameters[f'{wing}z2'] and
+#             ant_parameters[f'{wing}y1'] > ant_parameters[f'{wing}y2']):
+#             return 0
+#         if (ant_parameters[f'{wing}z2'] > ant_parameters[f'{wing}z1'] > ant_parameters[f'{wing}z3'] and
+#             ant_parameters[f'{wing}y1'] > ant_parameters[f'{wing}y2']):
+#             return 0
+#         if (ant_parameters[f'{wing}z1'] > ant_parameters[f'{wing}z3'] > ant_parameters[f'{wing}z2'] and
+#             ant_parameters[f'{wing}y3'] > ant_parameters[f'{wing}y1'] > ant_parameters[f'{wing}y2']):
+#             return 0
+#         if (ant_parameters[f'{wing}z2'] > ant_parameters[f'{wing}z3'] > ant_parameters[f'{wing}z1'] and
+#             ant_parameters[f'{wing}y3'] > ant_parameters[f'{wing}y1'] > ant_parameters[f'{wing}y2']):
+#             return 0
+#         if (ant_parameters[f'{wing}z2'] > ant_parameters[f'{wing}z3'] > ant_parameters[f'{wing}z1'] and
+#             ant_parameters[f'{wing}y2'] > ant_parameters[f'{wing}y1'] > ant_parameters[f'{wing}y3']):
+#             return 0
+#         if (ant_parameters[f'{wing}z1'] > ant_parameters[f'{wing}z3'] > ant_parameters[f'{wing}z2'] and
+#             ant_parameters[f'{wing}y2'] > ant_parameters[f'{wing}y1'] > ant_parameters[f'{wing}y3']):
+#             return 0
+#         if np.abs(ant_parameters[f'{wing}z2'] - ant_parameters[f'{wing}z1']) < ant_parameters['w']/Sz: return 0
+#         if np.abs(ant_parameters[f'{wing}z1'] - ant_parameters[f'{wing}z3']) < ant_parameters['w']/Sz: return 0
+#         if np.abs(ant_parameters[f'{wing}z2'] - ant_parameters[f'{wing}z3']) < ant_parameters['w']/Sz: return 0
+#         if ant_parameters[f'{wing}y1'] < ant_parameters['w']/Sy: return 0
+#         if np.abs(ant_parameters[f'{wing}y2'] - ant_parameters[f'{wing}y1']) < ant_parameters['w']/Sy: return 0
+#         if np.abs(ant_parameters[f'{wing}y1'] - ant_parameters[f'{wing}y3']) < ant_parameters['w']/Sy: return 0
+#         if np.abs(ant_parameters[f'{wing}y2'] - ant_parameters[f'{wing}y3']) < ant_parameters['w']/Sy: return 0
+#     if (Sz * ant_parameters[f'q1z3'] - ant_parameters['w']/2 <= 5
+#         and (ant_parameters[f'q1y3'] < ant_parameters['fx'] < ant_parameters[f'q1y2'] or
+#             ant_parameters[f'q1y2'] < ant_parameters['fx'] < ant_parameters[f'q1y3'])): return 0
+#     if (Sz * ant_parameters[f'w1z3'] - ant_parameters['w']/2 <= 5
+#         and (ant_parameters[f'w1y3'] < ant_parameters['fx'] < ant_parameters[f'w1y2'] or
+#             ant_parameters[f'w1y2'] < ant_parameters['fx'] < ant_parameters[f'w1y3'])): return 0
+#     wings = ['w1', 'w2','w3', 'q1', 'q2','q3']
+#     for wing in wings:
+#         if np.abs(ant_parameters[f'{wing}z0'] - ant_parameters[f'{wing}z1']) < ant_parameters['w'] / Sz: return 0
+#     if np.min([ant_parameters[f'q3z0'],ant_parameters[f'w3z0']]) > 0.2: return 0
+#     return 1
 
 def check_ant_validity(ant_parameters,model_parameters):
     Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
@@ -163,6 +193,7 @@ def check_ant_validity(ant_parameters,model_parameters):
     if np.min([ant_parameters[f'q3z0'],ant_parameters[f'w3z0']]) > 0.2: return 0
     return 1
 
+
 def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
     plt.ioff()
     f, ax1 = plt.subplots()
@@ -186,7 +217,7 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
             y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
         y.pop()
         data_linewidth_plot(y, sign*np.array(z),
-                            linewidth=ant_parameters['w']-0.01, alpha=alpha, color='b')
+                            linewidth=ant_parameters['w'], alpha=alpha, color='b')
     wings = ['w3', 'q3']
     for wing in wings:
         if wing[0]=='q':
@@ -199,7 +230,7 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
         z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
         y.append(Sy * ant_parameters[f'{wing}y{1:d}'])
         data_linewidth_plot(y, sign*np.array(z),
-                            linewidth=ant_parameters['w']-0.01, alpha=alpha, color='b')
+                            linewidth=ant_parameters['w'], alpha=alpha, color='b')
     data_linewidth_plot([0, 0],
                         [model_parameters['feed_length'] / 2, -model_parameters['feed_length'] / 2],
                         linewidth=ant_parameters['w'], alpha=alpha, color='w')
@@ -212,5 +243,6 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
     f.savefig(output_path + '\\output\\model_pictures\\image_' + str(run_ID) + '.png')
     plt.close(f)
 
+# if __name__ = '__main__':
 # a = get_parameters_names()
 # aa = randomize_ant(a,20,32,2)
