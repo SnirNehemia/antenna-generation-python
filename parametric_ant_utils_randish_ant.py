@@ -119,11 +119,15 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
     print(f'retried {count_retries:d} times')
     return ant_parameters
 
-def check_ant_validity(ant_parameters,model_parameters):
+def check_ant_validity(ant_parameters, model_parameters):
     Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
           - model_parameters['feed_length'] / 2)
     Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
     wings = ['w1','w2','q1','q2']
+    for key in ant_parameters:
+        if ant_parameters[key] < 0: return 0
+        if key != 'w' and ant_parameters[key] > 1: return 0
+
     for wing in wings:
         if (ant_parameters[f'{wing}z3'] > ant_parameters[f'{wing}z1'] > ant_parameters[f'{wing}z2'] and
             ant_parameters[f'{wing}y1'] > ant_parameters[f'{wing}y2']):
