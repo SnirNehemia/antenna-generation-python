@@ -3,7 +3,16 @@ import sys
 # sys.path.append(r"C:\Program Files\Dassault Systemes\B426CSTEmagConnector\CSTStudio\AMD64\python_cst_libraries")
 
 # TODO: change directory to cst's python library
-sys.path.append(r"C:\Program Files (x86)\CST Studio Suite 2024\AMD64\python_cst_libraries")
+CST_python_path = r"C:\Program Files (x86)\CST Studio Suite 2024\AMD64\python_cst_libraries"
+sys.path.append(CST_python_path)
+
+""" define run parameters """ #
+# --- define local path and project name
+# TODO: modify to direct it to your simulation model the path will be: os.path.join(simulation_dir,simulation_name)
+simulation_dir = 'C:\\Users\\Public\\cst_project'
+simulation_name = 'CST_Model_better_parametric'  # name of the cst simulation file
+starting_index = 130000  # the index of first datapoint in this generation run
+simulation_amount = 10000  # how many samples to run
 
 import cst
 print('can now communicate with ' + cst.__file__) # should print '<PATH_TO_CST_AMD64>\python_cst_libraries\cst\__init__.py'
@@ -62,14 +71,6 @@ def define_env_parameters():
     }
     return model_parameters
 
-""" define run parameters """ # TODO: modify to direct it to your simulation model
-# --- define local path and project name
-# project_name = r'Model3Again'
-simulation_name = 'CST_Model_better_parametric'  # name of the cst simulation file
-project_name = r'cst_project'  # name of the parent folder
-local_path = 'C:\\Users\\Public\\'  # path to parent folder
-starting_index = 130000
-simulation_amount = 10000
 
 """ LEGACY - may be useful for Avi """
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
@@ -111,15 +112,15 @@ ant_parameters_names = parametric_ant_utils.get_parameters_names()
 
 """ create all tree folder paths  """
 # --- from here on I define the paths based on the manually defined project and local path ---
-final_dir = local_path + project_name
-project_path = final_dir + "\\" + simulation_name + ".cst"
-results_path = final_dir+"\\output\\results"
+
+project_path = simulation_dir + "\\" + simulation_name + ".cst"
+results_path = simulation_dir+"\\output\\results"
 # dxf_directory = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name_DXF
-models_path =  final_dir+"\\output\\models"
-pattern_source_path = (final_dir+"\\" + simulation_name +
+models_path =  simulation_dir+"\\output\\models"
+pattern_source_path = (simulation_dir+"\\" + simulation_name +
                   r'\Export\Farfield')
-save_S11_pic_dir = final_dir+"\\output\\S11_pictures"
-STEP_source_path = (final_dir+"\\" + simulation_name +
+save_S11_pic_dir = simulation_dir+"\\output\\S11_pictures"
+STEP_source_path = (simulation_dir+"\\" + simulation_name +
                   r'\Model\3D')
 # --- for STLs export
 file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
@@ -158,15 +159,15 @@ for run_ID_local in range(0, simulation_amount):  #15001-starting_index-1 % 1506
         if not os.path.isdir(models_path + '\\' + str(run_ID)):
             os.mkdir(models_path + '\\' + str(run_ID))
         # Delete files in the CST folder to prevent errors
-        target_SPI_folder =final_dir + "\\" + simulation_name +"\\Result"
+        target_SPI_folder =simulation_dir + "\\" + simulation_name +"\\Result"
         for filename in os.listdir(target_SPI_folder):
             if filename.endswith('.spi'):
                 os.remove(target_SPI_folder +"\\" + filename)
-        target_delete_folder = final_dir + "\\" + simulation_name +"\\Model\\3D"
+        target_delete_folder = simulation_dir + "\\" + simulation_name +"\\Model\\3D"
         for filename in os.listdir(target_delete_folder):
             if filename.endswith('.stp') or filename.endswith('.stl') or filename.endswith('.hlg'):
                 os.remove(target_delete_folder +"\\" + filename)
-        target_delete_folder = final_dir + "\\" + simulation_name +"\\Export\\Farfield"
+        target_delete_folder = simulation_dir + "\\" + simulation_name +"\\Export\\Farfield"
         if os.path.isdir(target_delete_folder):
             for filename in os.listdir(target_delete_folder):
                 if filename.endswith('.txt'):
@@ -225,7 +226,7 @@ for run_ID_local in range(0, simulation_amount):  #15001-starting_index-1 % 1506
                         End Sub'''
                 project.schematic.execute_vba_code(VBA_code)
             # save picture of the antenna
-            parametric_ant_utils.save_figure(model_parameters, ant_parameters, local_path + project_name, run_ID)
+            parametric_ant_utils.save_figure(model_parameters, ant_parameters, simulation_dir, run_ID)
 
         print('created antenna... ',end='')
         """ -------------------------- Rebuild the model and run it ------------------------------------ """
@@ -259,7 +260,7 @@ for run_ID_local in range(0, simulation_amount):  #15001-starting_index-1 % 1506
                                         End Sub'''
                     project.schematic.execute_vba_code(VBA_code)
                 # save picture of the antenna
-                parametric_ant_utils.save_figure(model_parameters, ant_parameters, local_path + project_name, run_ID)
+                parametric_ant_utils.save_figure(model_parameters, ant_parameters, simulation_dir, run_ID)
                 project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
                 time.sleep(30)  # wait for 20 minutes, for the case of temporary license error
             if repeat_count == 6:
