@@ -128,7 +128,7 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 160000
+starting_index = 190000
 for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
@@ -359,7 +359,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
     # save picture of the S11
     plt.ioff()
     f, ax1 = plt.subplots()
-    ax1.plot(freq, 10 * np.log10(np.abs(S11)))
+    ax1.plot(freq, 20 * np.log10(np.abs(S11)))
     ax1.set_ylim(ymin=-20, ymax=0)
     ax1.set_ylabel('|S11|', color='C0')
     ax1.tick_params(axis='y', color='C0', labelcolor='C0')

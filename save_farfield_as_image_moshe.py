@@ -376,14 +376,15 @@ start_time = time.time()
 mode = 'both'
 freqs = [1500, 2100, 2400]
 raw_results_folder = r'C:\Users\Public\cst_project\output_moshe\results'
-destination_folder = r'C:\Users\Public\cst_project\output_moshe\farfield_images'
-for ID in os.listdir(raw_results_folder):
+destination_folder = r'C:\Users\Public\cst_project\output_moshe\farfield_images_25_11'
+filtered_ids = [id for id in os.listdir(raw_results_folder) if 'dipole' in id]
+for ID in filtered_ids:
     ID_folder = os.path.join(raw_results_folder,str(ID))
     for freq in freqs:
         if mode =='3d' or mode=='both': image_name = f"3D_{ID}_{freq}_ff.png"
         if mode =='2d': image_name = f"{ID:d}_{freq:d}_ff.png"
 
-        if os.path.isdir(ID_folder) and not(os.path.isfile(os.path.join(destination_folder,image_name))):
+        if os.path.isdir(ID_folder) and not(os.path.isfile(os.path.join(destination_folder, image_name))):
             save_ff_images_from_raw_directory(ID_folder,destination_folder,ID=ID,freq=freq,mode=mode)
         print(f'done with {ID} at frequency {freq}')
         # save_ff_images_from_raw_directory(r"C:\Users\shg\Desktop",r"C:\Users\shg\Desktop\farfield_test") # for testing!!!!

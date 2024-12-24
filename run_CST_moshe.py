@@ -16,7 +16,8 @@ from distutils.dir_util import copy_tree
 import shutil
 import pickle
 import time
-import parametric_ant_utils_classic_ant as parametric_ant_utils
+import parametric_ant_utils_randish_ant as parametric_ant_utils
+# import parametric_ant_utils
 from matplotlib import pyplot as plt
 from datetime import datetime
 
@@ -40,7 +41,7 @@ final_dir = local_path + project_name
 project_path = final_dir + "\\" + simulation_name + ".cst"
 results_path = final_dir+"\\output_moshe\\results"
 # dxf_directory = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name_DXF
-models_path =  final_dir+"\\output_moshe\\models"
+models_path = final_dir+"\\output_moshe\\models"
 pattern_source_path = (final_dir+"\\" + simulation_name +
                   r'\Export\Farfield')
 save_S11_pic_dir = final_dir+"\\output_moshe\\S11_pictures"
@@ -66,20 +67,32 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 
 cst_time = time.time()
-# TODO: if you want, you may write a for loop here.
-antennas_names = ['130767']
-for ant_name in antennas_names:
-    model_path = fr"C:\Users\Public\cst_project\output_moshe\generated\env_{ant_name}.pickle"
-    for grade in ['grade_0', 'grade_1', 'grade_2', 'gt']:
-        ant_ID = f'{ant_name}_{grade}'
-        ant_path = fr"C:\Users\Public\cst_project\output_moshe\generated\ant_{ant_ID}.pickle"
+data_path = r"C:\Users\Public\cst_project\output_moshe\test_generated_antennas_dipole"
+all_files = os.listdir(data_path)
+all_files = [file for file in all_files if 'gt.pickle' not in file]
+bad_ant_list = ['ant_SPEC_dipole_with_ground_ENV_142436_grade_1.pickle', 'ant_SPEC_dipole_with_ground_ENV_142436_grade_2.pickle']
+env_names = [name for name in all_files if 'env' in name]
+print(f'found {len(env_names)} envs')
+for env_name in env_names:
+    model_path = os.path.join(data_path, env_name)
+    pattern = env_name.replace("env_", "").replace(".pickle", "")
+    ant_names = [name for name in all_files if 'ant_'+pattern in name]
+    print(f'found {len(ant_names)} antennas for that env')
+    for ant_name in ant_names:
+        if ant_name in bad_ant_list:
+            print(f'{ant_name} is bad')
+            continue
+        ant_ID = ant_name.replace("ant_", "").replace(".pickle", "")
+        ant_path = os.path.join(data_path, ant_name)
+        if any([ant_ID in file for file in os.listdir(results_path)]):
+            print(f'already processed {ant_path}')
+            continue
         print(f'Working on antenna in path: {ant_path} ')
         # TODO:
         """ LOAD HERE:
          model_parameters and antenna_parameters
          do it as you got them - as a dictionary!
          add a parameter ant_ID to save it to a different file (so your results won't overwrite each other)"""
-
 
         file = open(model_path, 'rb')
         model_parameters = pickle.load(file)
@@ -88,7 +101,10 @@ for ant_name in antennas_names:
         file = open(ant_path, 'rb')
         ant_parameters = pickle.load(file)
         file.close()
-
+        if not parametric_ant_utils.check_ant_validity(ant_parameters=ant_parameters, model_parameters=model_parameters):
+            print(f'MODEL: {ant_ID} NOT VALID, CONTINUE TO NEXT SAMPLE!')
+            continue
+        print(f'MODEL: {ant_ID} VALID!')
         # Delete files in the CST folder to prevent errors
         target_SPI_folder =final_dir + "\\" + simulation_name +"\\Result"
         for filename in os.listdir(target_SPI_folder):
@@ -227,7 +243,7 @@ for ant_name in antennas_names:
         # save picture of the S11
         plt.ioff()
         f, ax1 = plt.subplots()
-        ax1.plot(freq, 20 * np.log10(np.abs(S11)))  # TODO: I fixed it here!
+        ax1.plot(freq, 20 * np.log10(np.abs(S11)))
         ax1.set_ylim(ymin=-20, ymax=0)
         ax1.set_ylabel('|S11|', color='C0')
         ax1.tick_params(axis='y', color='C0', labelcolor='C0')
