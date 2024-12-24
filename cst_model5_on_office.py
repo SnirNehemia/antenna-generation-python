@@ -23,12 +23,12 @@ from datetime import datetime
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_better_parametric_model4'
+simulation_name = 'CST_Model_better_parametric_model5'
 project_name = r'simplified'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
-local_path = 'G:\\local_model_4_path\\'
+local_path = 'G:\\local_model_5_path\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
@@ -75,7 +75,7 @@ check_env_validity = 0
 # }
 
 model_parameters = {
-    'type':4,
+    'type':5,
     'plane':'yz-flipped',#changetoyz-flipped
     #parametersthatchangeboththeantennaandtheenviroment
     'Sz':10,#coordinatealongthex(red)axis
@@ -83,36 +83,23 @@ model_parameters = {
     'w':1,#coordinatealongthev(green)axis
     'thickness':1,
     'feed_length':2,
-    'ground_width':1,
-    'ground_elongate':1,
-    'box_buffer':1,
-    'box_thickness':1,
-    'BIv_start':1,
-    'BIv_stop':1,
-    'BIu_start':1,
-    'BIu_stop':1,
-    'BI_dist':1
+    'Ly':1,
+    'Lz':1
 }
 
 ## --- define the model parameters limits for randomization:
 model_parameters_limits = model_parameters.copy()
-for key, value in model_parameters_limits.items():
-    if type(value) != str and key != 'type':
-        if model_parameters_limits[key]<=1:
-            model_parameters_limits[key] = [0, 1]
+# for key, value in model_parameters_limits.items():
+#     if type(value) != str and key != 'type':
+#         if model_parameters_limits[key]<=1:
+#             model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['Sz'] = [30,80]
-model_parameters_limits['Sy'] = [30,80]
-model_parameters_limits['box_thickness'] = [100, 30]
-model_parameters_limits['ground_width'] = [1,1]
-model_parameters_limits['box_buffer'] = [5, 10]
-model_parameters_limits['ground_elongate'] = [0.1, 2]
-model_parameters_limits['BIv_start'] = [0.1, 0.9]
-model_parameters_limits['BIv_stop'] = [0.1, 0.9]
-model_parameters_limits['BIu_start'] = [0.1, 0.9]
-model_parameters_limits['BIu_stop'] = [0.1, 0.9]
-model_parameters_limits['BI_dist'] = [0.1, 1]
+model_parameters_limits['Sz'] = [20,80]
+model_parameters_limits['Sy'] = [20,80]
+model_parameters_limits['Lz'] = [0, 2]
+model_parameters_limits['Ly'] = [0,2]
+model_parameters_limits['w'] = [1,2]
 
 ant_parameters_names = parametric_ant_utils.get_parameters_names()
 
