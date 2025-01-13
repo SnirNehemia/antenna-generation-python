@@ -105,7 +105,7 @@ for key, value in model_parameters_limits.items():
 model_parameters_limits['Sz'] = [30,80]
 model_parameters_limits['Sy'] = [30,80]
 model_parameters_limits['box_thickness'] = [100, 30]
-model_parameters_limits['ground_width'] = [0.1,1]
+model_parameters_limits['ground_width'] = [1,1]
 model_parameters_limits['box_buffer'] = [5, 10]
 model_parameters_limits['ground_elongate'] = [0.1, 2]
 model_parameters_limits['BIv_start'] = [0.1, 0.9]
