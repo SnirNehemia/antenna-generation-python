@@ -16,7 +16,7 @@ from distutils.dir_util import copy_tree
 import shutil
 import pickle
 import time
-import parametric_ant_utils_randish_ant as parametric_ant_utils
+import parametric_ant_utils_model6 as parametric_ant_utils
 # import parametric_ant_utils
 from matplotlib import pyplot as plt
 from datetime import datetime
@@ -24,8 +24,8 @@ from datetime import datetime
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_better_parametric_model5'
-project_name = r'cst_project'
+simulation_name = 'CST_Model6'
+project_name = r'model_6'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
@@ -69,7 +69,7 @@ for data_path, bad_ant_list in zip(data_paths, bad_ant_lists):
                       r'\Model\3D')
     # --- for export STLs
     file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
-                  'Env_PEC', 'Env_FR4', 'Env_Vacuum']
+                  'Env_FR4', 'Env_Vacuum']
 
     # file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
     #               'Env_FR4', 'Env_Vacuum']
