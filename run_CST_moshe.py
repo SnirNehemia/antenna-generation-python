@@ -24,7 +24,7 @@ from datetime import datetime
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_better_parametric_moshe'
+simulation_name = 'CST_Model_better_parametric_model5'
 project_name = r'cst_project'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
@@ -33,18 +33,25 @@ local_path = 'C:\\Users\\Public\\'
 
 
 # ant_parameters_names = parametric_ant_utils.get_parameters_names()
-
-
+data_path = r"C:\Users\Public\cst_project\output_moshe\model_5\generated_samples_separated"
+data_name = os.path.basename(data_path)
+output_folder = data_path.replace(data_name, f'all_logs_{data_name}')
+os.makedirs(output_folder, exist_ok=True)
 """ create all tree folder paths """
 # --- from here on I define the paths based on the manually defined project and local path ---
 final_dir = local_path + project_name
 project_path = final_dir + "\\" + simulation_name + ".cst"
-results_path = final_dir+"\\output_moshe\\results"
+results_path = os.path.join(output_folder, "results")
+os.makedirs(results_path, exist_ok=True)
+
 # dxf_directory = "C:\\Users\\shg\\OneDrive - Tel-Aviv University\\Documents\\CST_projects\\"+project_name_DXF
-models_path = final_dir+"\\output_moshe\\models"
+models_path = os.path.join(output_folder, "models")
+os.makedirs(models_path, exist_ok=True)
+
 pattern_source_path = (final_dir+"\\" + simulation_name +
                   r'\Export\Farfield')
-save_S11_pic_dir = final_dir+"\\output_moshe\\S11_pictures"
+save_S11_pic_dir = os.path.join(output_folder, "S11_pictures")
+os.makedirs(save_S11_pic_dir, exist_ok=True)
 STEP_source_path = (final_dir+"\\" + simulation_name +
                   r'\Model\3D')
 # --- for export STLs
@@ -67,16 +74,16 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 
 cst_time = time.time()
-data_path = r"C:\Users\Public\cst_project\output_moshe\test_generated_antennas_dipole"
 all_files = os.listdir(data_path)
-all_files = [file for file in all_files if 'gt.pickle' not in file]
-bad_ant_list = ['ant_SPEC_dipole_with_ground_ENV_142436_grade_1.pickle', 'ant_SPEC_dipole_with_ground_ENV_142436_grade_2.pickle']
+bad_ant_list = []
+#bad_ant_list = ["ant_00916_grade_0.pickle", "ant_02168_grade_0.pickle"]
 env_names = [name for name in all_files if 'env' in name]
 print(f'found {len(env_names)} envs')
 for env_name in env_names:
     model_path = os.path.join(data_path, env_name)
     pattern = env_name.replace("env_", "").replace(".pickle", "")
     ant_names = [name for name in all_files if 'ant_'+pattern in name]
+    #ant_names = [name for name in ant_names if 'grade_0' in name]
     print(f'found {len(ant_names)} antennas for that env')
     for ant_name in ant_names:
         if ant_name in bad_ant_list:

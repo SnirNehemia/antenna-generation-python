@@ -120,9 +120,14 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
     return ant_parameters
 
 def check_ant_validity(ant_parameters, model_parameters):
-    Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
-          - model_parameters['feed_length'] / 2)
-    Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
+    assert int(model_parameters["type"]) in [3, 5], 'model_parameters["type"] must be either 3 or 5'
+    if int(model_parameters["type"]) == 3:
+        Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
+              - model_parameters['feed_length'] / 2)
+        Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
+    else:
+        Sz = model_parameters['Sz'] - ant_parameters['w'] / 2 - model_parameters['feed_length'] / 2
+        Sy = model_parameters['Sy'] - ant_parameters['w']
     wings = ['w1','w2','q1','q2']
     for key in ant_parameters:
         if ant_parameters[key] < 0: return 0
@@ -171,9 +176,14 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
     plt.ioff()
     f, ax1 = plt.subplots()
     wings = ['w1', 'w2', 'q1', 'q2']
-    Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
-          - model_parameters['feed_length'] / 2)
-    Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
+    assert int(model_parameters["type"]) in [3, 5], 'model_parameters["type"] must be either 3 or 5'
+    if int(model_parameters["type"]) == 3:
+        Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
+              - model_parameters['feed_length'] / 2)
+        Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
+    else:
+        Sz = model_parameters['Sz'] - ant_parameters['w'] / 2 - model_parameters['feed_length'] / 2
+        Sy = model_parameters['Sy'] - ant_parameters['w']
     data_linewidth_plot([Sy * ant_parameters['fx'], Sy * ant_parameters['fx']],
                         [-10,10], linewidth=ant_parameters['w'] + 0.1, alpha=alpha, color='k')
     for wing in wings:
