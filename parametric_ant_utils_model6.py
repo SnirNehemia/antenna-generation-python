@@ -74,6 +74,8 @@ def check_ant_validity(ant_parameters,model_parameters):
     for iw in range(4):
         if ant_parameters[f'L{iw + 1:d}_rel'] > 1:
             return 0
+    # if ant_parameters['L4'] > ant_parameters['L2']:
+    #     return 0
     return 1
 
 
