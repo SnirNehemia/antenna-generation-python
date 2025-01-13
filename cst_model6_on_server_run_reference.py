@@ -26,8 +26,8 @@ def myround(x, base=5):
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model6'
-project_name = r'model_6'
+simulation_name = 'CST_Model6_relative_reference'
+project_name = r'model_6_reference'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
@@ -81,17 +81,17 @@ model_parameters = {
     'type':6,
     'plane':'yz-flipped',#changetoyz-flipped
     #parametersthatchangeboththeantennaandtheenviroment
-    'LG_z':10,
-    'LG_y': 50,
-    'A_z':1
+    'LG_z':40,
+    'LG_y': 20,
+    'A_z':10
 }
-
-## --- define the model parameters limits for randomization:
-model_parameters_limits = model_parameters.copy()
-
-model_parameters_limits['LG_z'] = [50,70]
-model_parameters_limits['LG_y'] = [15,25]
-model_parameters_limits['A_z'] = [10, 10]
+#
+# ## --- define the model parameters limits for randomization:
+# model_parameters_limits = model_parameters.copy()
+#
+# model_parameters_limits['LG_z'] = [50,70]
+# model_parameters_limits['LG_y'] = [15,25]
+# model_parameters_limits['A_z'] = [10, 10]
 
 # model_parameters_limits['LG_z'] = [20,60]
 # model_parameters_limits['LG_y'] = [15,30]
@@ -99,6 +99,14 @@ model_parameters_limits['A_z'] = [10, 10]
 
 ant_parameters_names = parametric_ant_utils.get_parameters_names()
 
+ant_parameters={}
+ant_parameters['L1_rel'] = 0.14
+ant_parameters['L2_rel'] = 1
+ant_parameters['L3_rel'] = 1
+ant_parameters['L4_rel'] = 0.89
+ant_parameters['W1'] = 1.1
+ant_parameters['W2'] = 2.1
+ant_parameters['gap'] = 0.5
 
 """ create all tree folder paths """
 # --- from here on I define the paths based on the manually defined project and local path ---
@@ -132,8 +140,8 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 # run the function that is currently called 'main' to generate the cst file
 overall_sim_time = time.time()
 ants_count = 0
-starting_index = 20000
-for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problematic!
+starting_index = 0
+for run_ID_local in range(1):  #15001-starting_index-1 % 15067 is problematic!
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
             run_ID) + '.png'):  # os.path.isdir(models_path + '\\' + str(run_ID)):
@@ -164,87 +172,7 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
                     os.remove(target_delete_folder +"\\" + filename)
         print('deleted SPI, models and results... ', end='')
         # Determine env parameter by adjusting model_parameters values
-        if change_env:
-            np.random.seed(run_ID)
-            param_name = 'LG_z'
-            value = model_parameters_limits[param_name]
-            model_parameters[param_name] = myround(np.random.uniform(value[0],value[1]), base=10)
-            param_name = 'LG_y'
-            value = model_parameters_limits[param_name]
-            model_parameters[param_name] = myround(np.random.uniform(value[0], value[1]), base=5)
-            param_name = 'A_z'
-            value = model_parameters_limits[param_name]
-            model_parameters[param_name] = myround(np.random.uniform(value[0], value[1]), base=1)
-            # randomize environment
-            # valid_env = 0
-            # while not valid_env:
-            #     for key, value in model_parameters_limits.items():
-            #         if type(value) == list:
-            #             model_parameters[key] = myround(np.random.uniform(value[0],value[1]),1)
-            #             # update the changed variables in environment and save the current run as previous
-            #             model_parameters[key] = np.max([model_parameters[key], 0.1])
-            #     if (model_parameters['Sz'] / 2 > 20 and
-            #         model_parameters['Sy'] >30):
-            #         valid_env = 1
-            # update model
-            for key, value in model_parameters.items():
-                if type(value) != str and key != 'type':
-                    # print('U-'+key)
-                    VBA_code = r'''Sub Main
-                            StoreParameter("'''+key+'''", '''+str(model_parameters[key])+''')
-                            End Sub'''
-                    project.schematic.execute_vba_code(VBA_code)
-        if create_new_models: # for new models
-            ant_parameters = parametric_ant_utils.randomize_ant(ant_parameters_names,model_parameters,seed=run_ID)
-            for key, value in ant_parameters.items():
-                VBA_code = r'''Sub Main
-                        StoreParameter("'''+key+'''", '''+str(value)+''')
-                        End Sub'''
-                project.schematic.execute_vba_code(VBA_code)
-            # save picture of the antenna
-            parametric_ant_utils.save_figure(model_parameters, ant_parameters, local_path + project_name, run_ID)
-            # plt.ioff()
-            # f, ax1 = plt.subplots()
-            # wings = ['w1', 'w2', 'q1', 'q2']
-            # Sz = (model_parameters['length'] * model_parameters['adz']* model_parameters['arz']/2-ant_parameters['w']/2
-            #       - model_parameters['feed_length']/2)
-            # Sy = model_parameters['height'] * model_parameters['ady']* model_parameters['ary']-ant_parameters['w']
-            # data_linewidth_plot([0,0], [model_parameters['feed_length']/2,-model_parameters['feed_length']/2],
-            #                         linewidth=ant_parameters['w'], alpha=0.4, color='r')
-            # for wing in wings:
-            #     z = [model_parameters['feed_length']/2]
-            #     y = [0,0]
-            #     for i1 in range(3):
-            #         z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
-            #         z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
-            #         y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
-            #         y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
-            #     y.pop()
-            #     data_linewidth_plot(y, z,
-            #                             linewidth=ant_parameters['w'], alpha=0.4, color='b')
-            # wings = ['w3', 'q3']
-            # for wing in wings:
-            #     z = [model_parameters['feed_length'] / 2]
-            #     y = [0, 0]
-            #     z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
-            #     z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
-            #     y.append(Sy * ant_parameters[f'{wing}y{1:d}'])
-            #     data_linewidth_plot(y, z,
-            #                         linewidth=ant_parameters['w'], alpha=0.4, color='b')
-            #     plt.title('dimensions in mm')
-            #     plt.show(block=False)
-            #     f.savefig(local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
-            #     plt.close(f)
-        else: # for existing models
-            print('not supported yet')
-            # original_model_path = original_models_path + '\\models\\' + str(run_ID_local)
-            # curr_model_path = models_path
-            # for filename in os.listdir(original_model_path):
-            #     if filename.endswith('.dxf'):
-            #         shutil.copy(original_model_path + '\\' + filename, models_path + '\\' + str(run_ID))
-            #         shutil.copy(original_model_path + '\\' + filename, local_path + project_name + '\\DXF_Model')
-            # shutil.copy(original_models_path + '\\model_pictures\\image_' + str(run_ID_local)+'.png',
-            #             local_path + project_name + '\\output\\model_pictures\\image_' + str(run_ID)+'.png')
+
         print('created antenna... ',end='')
         """ Rebuild the model and run it """
         project.model3d.full_history_rebuild()  # I just replaced modeler with model3d
