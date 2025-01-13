@@ -213,3 +213,12 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
 
 # a = get_parameters_names()
 # aa = randomize_ant(a,20,32,2)
+if __name__ == "__main__":
+    import pickle
+    import os
+    path = r'G:\local_model_5_path\simplified\output\models\90'
+    ant_path = os.path.join(path, 'ant_parameters.pickle')
+    model_path = os.path.join(path, 'model_parameters.pickle')
+    ant_params = pickle.load(open(ant_path, 'rb'))
+    model_params = pickle.load(open(model_path, 'rb'))
+    print(check_ant_validity(ant_params, model_params))

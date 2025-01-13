@@ -16,19 +16,22 @@ from distutils.dir_util import copy_tree
 import shutil
 import pickle
 import time
-import parametric_ant_utils_randish_ant_model4 as parametric_ant_utils
+import parametric_ant_utils_model6 as parametric_ant_utils
 from matplotlib import pyplot as plt
 from datetime import datetime
+
+def myround(x, base=5):
+    return base * round(x/base)
 
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_better_parametric_model5'
+simulation_name = 'CST_Model6'
 project_name = r'simplified'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
-local_path = 'G:\\local_model_5_path\\'
+local_path = 'G:\\local_model_6_path\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
@@ -75,31 +78,24 @@ check_env_validity = 0
 # }
 
 model_parameters = {
-    'type':5,
+    'type':6,
     'plane':'yz-flipped',#changetoyz-flipped
     #parametersthatchangeboththeantennaandtheenviroment
-    'Sz':10,#coordinatealongthex(red)axis
-    'Sy': 50,
-    'w':1,#coordinatealongthev(green)axis
-    'thickness':1,
-    'feed_length':2,
-    'Ly':1,
-    'Lz':1
+    'LG_z':10,
+    'LG_y': 50,
+    'A_z':1
 }
 
 ## --- define the model parameters limits for randomization:
 model_parameters_limits = model_parameters.copy()
-# for key, value in model_parameters_limits.items():
-#     if type(value) != str and key != 'type':
-#         if model_parameters_limits[key]<=1:
-#             model_parameters_limits[key] = [0, 1]
-# EXAMPLE for a costum parameter
-# model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['Sz'] = [20,80]
-model_parameters_limits['Sy'] = [20,80]
-model_parameters_limits['Lz'] = [0, 2]
-model_parameters_limits['Ly'] = [0,2]
-model_parameters_limits['w'] = [1,2]
+
+model_parameters_limits['LG_z'] = [40,40]
+model_parameters_limits['LG_y'] = [20,20]
+model_parameters_limits['A_z'] = [10, 10]
+
+# model_parameters_limits['LG_z'] = [20,60]
+# model_parameters_limits['LG_y'] = [15,30]
+# model_parameters_limits['A_z'] = [8, 15]
 
 ant_parameters_names = parametric_ant_utils.get_parameters_names()
 
@@ -118,7 +114,7 @@ STEP_source_path = (final_dir+"\\" + simulation_name +
                   r'\Model\3D')
 # --- for export STLs
 file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
-              'Env_PEC', 'Env_FR4', 'Env_Vacuum']
+              'Env_FR4', 'Env_Vacuum']
 
 # file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
 #               'Env_FR4', 'Env_Vacuum']
@@ -170,17 +166,26 @@ for run_ID_local in range(0, 10000):  #15001-starting_index-1 % 15067 is problem
         # Determine env parameter by adjusting model_parameters values
         if change_env:
             np.random.seed(run_ID)
+            param_name = 'LG_z'
+            value = model_parameters_limits[param_name]
+            model_parameters[param_name] = myround(np.random.uniform(value[0],value[1]), base=5)
+            param_name = 'LG_y'
+            value = model_parameters_limits[param_name]
+            model_parameters[param_name] = myround(np.random.uniform(value[0], value[1]), base=5)
+            param_name = 'A_z'
+            value = model_parameters_limits[param_name]
+            model_parameters[param_name] = myround(np.random.uniform(value[0], value[1]), base=1)
             # randomize environment
-            valid_env = 0
-            while not valid_env:
-                for key, value in model_parameters_limits.items():
-                    if type(value) == list:
-                        model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
-                        # update the changed variables in environment and save the current run as previous
-                        model_parameters[key] = np.max([model_parameters[key], 0.1])
-                if (model_parameters['Sz'] / 2 > 20 and
-                    model_parameters['Sy'] >30):
-                    valid_env = 1
+            # valid_env = 0
+            # while not valid_env:
+            #     for key, value in model_parameters_limits.items():
+            #         if type(value) == list:
+            #             model_parameters[key] = myround(np.random.uniform(value[0],value[1]),1)
+            #             # update the changed variables in environment and save the current run as previous
+            #             model_parameters[key] = np.max([model_parameters[key], 0.1])
+            #     if (model_parameters['Sz'] / 2 > 20 and
+            #         model_parameters['Sy'] >30):
+            #         valid_env = 1
             # update model
             for key, value in model_parameters.items():
                 if type(value) != str and key != 'type':
