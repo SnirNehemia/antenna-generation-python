@@ -20,10 +20,33 @@ def rel2abs(ant_parameters, model_parameters):
         ant_parameters_abs['L2_rel'] = ant_parameters_abs['L2_rel'] * (model_parameters['A_z'] - ant_parameters_abs['W2'])
         ant_parameters_abs['L3_rel'] = ant_parameters_abs['L3_rel'] * (model_parameters['LG_y'] - ant_parameters_abs['W1']*3 - - ant_parameters_abs['gap'])
         ant_parameters_abs['L4_rel'] = ant_parameters_abs['L4_rel'] * ant_parameters_abs['L2_rel']
+    if model_parameters['type'] == 5:
+        ant_parameters_abs = ant_parameters.copy()
+        Sz = model_parameters['Sz'] - ant_parameters['w'] / 2 - model_parameters['feed_length'] / 2
+        Sy = model_parameters['Sy'] - ant_parameters['w']
+        for key, value in ant_parameters.items():
+            if len(key) == 4:
+                if key[2] == 'z':
+                    ant_parameters_abs[key] = np.round(value * Sz, decimals=2)
+                if key[2] == 'y':
+                    ant_parameters_abs[key] = np.round(value * Sy, decimals=2)
+            if key == 'fx':
+                ant_parameters_abs[key] = np.round(value * Sy, decimals=2)
     return ant_parameters_abs
 
 def abs2rel(ant_parameters_abs, model_parameters):
     ant_parameters_rel = ant_parameters_abs.copy()
+    if model_parameters['type'] == 5:
+        Sz = model_parameters['Sz'] - ant_parameters_abs['w'] / 2 - model_parameters['feed_length'] / 2
+        Sy = model_parameters['Sy'] - ant_parameters_abs['w']
+        for key, value in ant_parameters_abs.items():
+            if len(key) == 4:
+                if key[2] == 'z':
+                    ant_parameters_rel[key] = np.round(value / Sz, decimals=2)
+                if key[2] == 'y':
+                    ant_parameters_rel[key] = np.round(value / Sy, decimals=2)
+            if key == 'fx':
+                ant_parameters_rel[key] = np.round(value / Sy, decimals=2)
     if model_parameters['type'] == 3:
         Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
               - model_parameters['feed_length'] / 2)
@@ -47,6 +70,11 @@ def abs2rel(ant_parameters_abs, model_parameters):
 
 def model_rel2abs(model_parameters):
     model_parameters_abs = model_parameters.copy()
+    if model_parameters['type'] == 5:
+        model_parameters_abs = model_parameters.copy()
+        model_parameters_abs['Lz'] = model_parameters['Sz'] * model_parameters_abs['Lz']
+        model_parameters_abs['Ly'] = model_parameters['Sy'] * model_parameters_abs['Ly']
+        # model_parameters_abs['d'] = model_parameters['d'] * model_parameters['height']
     if model_parameters['type'] == 3:
         axes = ['x','y','z']
         dimensions = ['width','height','length']
