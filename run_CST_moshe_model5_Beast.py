@@ -16,7 +16,7 @@ from distutils.dir_util import copy_tree
 import shutil
 import pickle
 import time
-import parametric_ant_utils_randish_ant as parametric_ant_utils
+import parametric_ant_utils_randish_ant_model4 as parametric_ant_utils
 # import parametric_ant_utils
 from matplotlib import pyplot as plt
 from datetime import datetime
