@@ -88,6 +88,8 @@ def model_rel2abs(model_parameters):
         model_parameters_abs['b'] = model_parameters['b'] * model_parameters['height']
         model_parameters_abs['c'] = model_parameters['c'] * model_parameters['height']
         # model_parameters_abs['d'] = model_parameters['d'] * model_parameters['height']
+    if model_parameters['type'] == 6:
+        return model_parameters_abs
     return model_parameters_abs
 
 # def model_abs2rel(ant_parameters_abs, model_parameters):
