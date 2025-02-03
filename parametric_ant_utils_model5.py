@@ -34,6 +34,37 @@ class data_linewidth_plot():
         self.timer.start()
 
 
+# def add_curve(cst, p1, p2, count):
+#     vba_curve = f"""With Polygon
+#          .Reset
+#          .Name "polygon1"
+#          .Curve "curve2"
+#          .Point "Sz*{p1[0]:s}", "Sy*{p1[1]:s}"
+#          .LineTo "Sz*{p2[0]:s}", "Sy*{p2[1]:s}"
+#          .Create
+#         End With """
+#     vba_solid = f"""With TraceFromCurve
+#          .Reset
+#          .Name "solid{str(count):s}"
+#          .Component "Antenna"
+#          .Material "PEC"
+#          .Curve "curve2:polygon1"
+#          .Thickness "0"
+#          .Width "w"
+#          .RoundStart "False"
+#          .RoundEnd "False"
+#          .DeleteCurve "True"
+#          .GapType "2"
+#          .Create
+#         End With"""
+#     cst.add_to_history(f'create curve {str(count)}', vba_curve)
+#     cst.add_to_history(f'create solid {str(count)}', vba_solid)
+#
+# def create_ant(cst):
+#     # wings = [1,2,3]
+#     # subwings = [1,2,3,4]
+#     # sides = ['w','q']
+#     curves_list = [['']]
 
 
 def get_parameters_names():
@@ -64,7 +95,7 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
     while not valid_ant:
         for key in parameters_names:
             ant_parameters[key] = np.max([np.round(np.random.uniform(),decimals=1),0.1])
-        פant_parameters['w'] = np.random.randint(1, 15)
+        ant_parameters['w'] = np.random.randint(1, 15)
         ant_parameters['q1z3'] = np.round(np.random.uniform(),decimals=1)
         ant_parameters['w1z3'] = np.round(np.random.uniform(), decimals=1)
         # Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
@@ -162,6 +193,62 @@ def check_ant_validity(ant_parameters,model_parameters):
     if np.min([ant_parameters[f'q3z0'],ant_parameters[f'w3z0']]) > 0.2: return 0
     return 1
 
+def create_points_list(model_parameters,ant_parameters):
+    def create_points_list(model_parameters, ant_parameters):
+        wings = ['w1', 'w2']
+        Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters[
+            'w'] / 2
+              - model_parameters['feed_length'] / 2)
+        Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
+        feed_PEC_points = [[[Sy * ant_parameters['fx'], -10 - model_parameters['feed_length']],
+                            [Sy * ant_parameters['fx'], -model_parameters['feed_length']]],
+                           [Sy * ant_parameters['fx'], 10], [Sy * ant_parameters['fx'], 0]]
+        ant_PEC_points = []
+        for wing in wings:
+            sign = 1
+            z = [Sz * ant_parameters[f'{wing}z0']]
+            y = [0, 0]
+            for i1 in range(3):
+                z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
+                z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
+                y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
+                y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
+            y.pop()
+            wing_points = [[y[ii], sign * np.array(z[ii])] for [ii, temp] in enumerate(y)]
+            ant_PEC_points.append(wing_points)
+        wings = ['w3']
+        for wing in wings:
+            sign = 1
+            z = [Sz * ant_parameters[f'{wing}z0']]
+            y = [Sy * ant_parameters['fx'], Sy * ant_parameters['fx']]
+            z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
+            z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
+            y.append(Sy * ant_parameters[f'{wing}y{1:d}'])
+            # wing_points = [[y[ii], sign * np.array(z[ii])] for [ii, temp] in enumerate(y)] # TODO:
+            wing_points = [[y[ii], sign * np.array(z[ii])] for [ii, temp] in enumerate(y)]
+            ant_PEC_points.append(wing_points)
+        # feed_points = [[Sy * ant_parameters['fx'], model_parameters['feed_length'] / 2], # TODO:
+        #                     [Sy * ant_parameters['fx'], -model_parameters['feed_length'] / 2]]
+        feed_points = [[Sy * ant_parameters['fx'], 0],  # TODO:
+                       [Sy * ant_parameters['fx'], -model_parameters['feed_length']]]
+    # now we have 3 lists:
+    #   1. feed_points - the points describing the feed (not PEC)
+    #   2. feed_PEC_points - a list of two elements - the points of the (not adjustable) feed PEC legs
+    #   3. ant_PEC - a list of lists - each describes a set of points of a specific antenna PEC leg.
+    # all of these 'lines' have the same width in the simulation - ant_parameters['w']
+
+    # ASSUMING XY INITIAL ORIENTATION the translation of the axes for the antenna should be:  # TODO:
+        # rotation of 90 degs around [0, 0, 1]
+        # shift of [0, -(model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 +
+    #             # ant_parameters['w'] / 2) - model_parameters['feed_length'], 0]
+
+# --------------------------------------------------------------------------------------------------------------------
+    # ASSUMING ZY INITIAL ORIENTATION the translation of the axes for the antenna should be:
+    #     rotation of 180 degs around [1, 0, 0]
+    #     shift of [0, -(model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 +
+    #             # ant_parameters['w'] / 2) - model_parameters['feed_length'], 0]
+
+ # -(Sz + w / 2) - feed_length
 
 def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
     plt.ioff()
@@ -212,64 +299,6 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
     f.savefig(output_path + '\\output\\model_pictures\\image_' + str(run_ID) + '.png')
     plt.close(f)
 
-def create_points_list(model_parameters,ant_parameters):
-    wings = ['w1', 'w2', 'q1', 'q2']
-    Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
-          - model_parameters['feed_length'] / 2)
-    Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
-    feed_PEC_points = [[[Sy * ant_parameters['fx'], -10-model_parameters['feed_length']],
-                        [Sy * ant_parameters['fx'], -model_parameters['feed_length']]],
-                        [Sy * ant_parameters['fx'], 10], [Sy * ant_parameters['fx'], 0]]
-    ant_PEC_points = []
-    for wing in wings:
-        if wing[0]=='q':
-            sign=-1
-        else:
-            sign=1
-        z = [Sz * ant_parameters[f'{wing}z0']]
-        y = [0, 0]
-        for i1 in range(3):
-            z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
-            z.append(Sz * ant_parameters[f'{wing}z{i1 + 1:d}'])
-            y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
-            y.append(Sy * ant_parameters[f'{wing}y{i1 + 1:d}'])
-        y.pop()
-        if wing[0]=='q':
-            wing_points = [[y[ii], sign * np.array(z[ii])-model_parameters['feed_length']] for [ii, temp] in enumerate(y)]
-        else:
-            wing_points = [[y[ii],sign*np.array(z[ii])] for [ii,temp] in enumerate(y)]
-        ant_PEC_points.append(wing_points)
-    wings = ['w3', 'q3']
-    for wing in wings:
-        if wing[0]=='q':
-            sign=-1
-        else:
-            sign=1
-        z = [Sz * ant_parameters[f'{wing}z0']]
-        y = [Sy * ant_parameters['fx'], Sy * ant_parameters['fx']]
-        z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
-        z.append(Sz * ant_parameters[f'{wing}z{1:d}'])
-        y.append(Sy * ant_parameters[f'{wing}y{1:d}'])
-        # wing_points = [[y[ii], sign * np.array(z[ii])] for [ii, temp] in enumerate(y)] # TODO:
-        if wing[0]=='q': # TODO:
-            wing_points = [[y[ii], sign * np.array(z[ii])-model_parameters['feed_length']] for [ii, temp] in enumerate(y)]
-        else:
-            wing_points = [[y[ii],sign*np.array(z[ii])] for [ii,temp] in enumerate(y)]
-        ant_PEC_points.append(wing_points)
-    # feed_points = [[Sy * ant_parameters['fx'], model_parameters['feed_length'] / 2], # TODO:
-    #                     [Sy * ant_parameters['fx'], -model_parameters['feed_length'] / 2]]
-    feed_points = [[Sy * ant_parameters['fx'], 0], # TODO:
-                   [Sy * ant_parameters['fx'], -model_parameters['feed_length']]]
-    # now we have 3 lists:
-    #   1. feed_points - the points describing the feed (not PEC)
-    #   2. feed_PEC_points - a list of two elements - the points of the (not adjustable) feed PEC legs
-    #   3. ant_PEC - a list of lists - each describes a set of points of a specific antenna PEC leg.
-    # all of these 'lines' have the same width in the simulation - ant_parameters['w']
-
-    # ASSUMING ZY ORIENTATION:
-    # rotation of 180 degs around [1, 0, 0]
-    # the alignement we talked about
-
-
-
-
+# if __name__ = '__main__':
+# a = get_parameters_names()
+# aa = randomize_ant(a,20,32,2)
