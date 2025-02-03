@@ -64,7 +64,7 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
     while not valid_ant:
         for key in parameters_names:
             ant_parameters[key] = np.max([np.round(np.random.uniform(),decimals=1),0.1])
-        ant_parameters['w'] = np.random.randint(1, 15)
+        פant_parameters['w'] = np.random.randint(1, 15)
         ant_parameters['q1z3'] = np.round(np.random.uniform(),decimals=1)
         ant_parameters['w1z3'] = np.round(np.random.uniform(), decimals=1)
         # Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
@@ -217,8 +217,8 @@ def create_points_list(model_parameters,ant_parameters):
     Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
           - model_parameters['feed_length'] / 2)
     Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
-    feed_PEC_points = [[Sy * ant_parameters['fx'], Sy * ant_parameters['fx']],
-                        [-10, 10]]
+    feed_PEC_points = [[[Sy * ant_parameters['fx'], -10],[Sy * ant_parameters['fx'], -model_parameters['feed_length'] / 2]],
+                        [Sy * ant_parameters['fx'], 10], [Sy * ant_parameters['fx'], model_parameters['feed_length'] / 2]]
     ant_PEC_points = []
     for wing in wings:
         if wing[0]=='q':
@@ -248,10 +248,10 @@ def create_points_list(model_parameters,ant_parameters):
         y.append(Sy * ant_parameters[f'{wing}y{1:d}'])
         wing_points = [[y[ii], sign * np.array(z[ii])] for [ii, temp] in enumerate(y)]
         ant_PEC_points.append(wing_points)
-    feed_points = [[Sy * ant_parameters['fx'], Sy * ant_parameters['fx']],
-                        [model_parameters['feed_length'] / 2, -model_parameters['feed_length'] / 2]]
+    feed_points = [[Sy * ant_parameters['fx'], model_parameters['feed_length'] / 2],
+                        [Sy * ant_parameters['fx'], -model_parameters['feed_length'] / 2]]
     # now we have 3 lists:
     #   1. feed_points - the points describing the feed (not PEC)
-    #   2. feed_PEC_points - the points of the (not adjustable) feed PEC legs
+    #   2. feed_PEC_points - a list of two elements - the points of the (not adjustable) feed PEC legs
     #   3. ant_PEC - a list of lists - each describes a set of points of a specific antenna PEC leg.
-    # all of these 'lines' have the save width in the simulation - ant_parameters['w']
+    # all of these 'lines' have the same width in the simulation - ant_parameters['w']
