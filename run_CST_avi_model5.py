@@ -16,7 +16,7 @@ from distutils.dir_util import copy_tree
 import shutil
 import pickle
 import time
-import parametric_ant_utils_model6 as parametric_ant_utils
+import parametric_ant_utils_randish_ant as parametric_ant_utils
 # import parametric_ant_utils
 from matplotlib import pyplot as plt
 from datetime import datetime
@@ -24,12 +24,12 @@ from datetime import datetime
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model6'
-project_name = r'model_6'
+simulation_name = 'CST_Model_parametric_model5_avi'
+project_name = r'cst_project'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
-local_path = "C:\\Users\\User\\Documents\\"
+local_path = 'C:\\Users\\Public\\'
 final_dir = local_path + project_name
 project_path = final_dir + "\\" + simulation_name + ".cst"
 """ open the CST project that we already created """
@@ -40,24 +40,13 @@ project = cst.interface.DesignEnvironment.open_project(cst_instance, project_pat
 results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
 # ant_parameters_names = parametric_ant_utils.get_parameters_names()
-data_paths = [
-                os.path.join(local_path, project_name, 'output_moshe', 'generated_samples_sweep_testdata'),
-                os.path.join(local_path,project_name,'output_moshe', 'generated_sub_val_set_NN'),
-                os.path.join(local_path,project_name,'output_moshe', 'generated_sweep_testdata_NN'),
-                os.path.join(local_path,project_name,'output_moshe', 'generated_sub_val_set_NN_genetic'),
-                os.path.join(local_path,project_name,'output_moshe', 'generated_sweep_testdata_NN_genetic'),
-                os.path.join(local_path,project_name,'output_moshe', 'generated_sub_val_set_Shahar'),
-                os.path.join(local_path,project_name,'output_moshe', 'generated_sweep_testdata_Shahar'),
+data_paths = [r"C:\Users\Public\cst_project\output_moshe\model_5\generated_samples_separated_basic",
+              r"C:\Users\Public\cst_project\output_moshe\model_5\generated_samples_hyper",
               ]
 bad_ant_lists = [
-                    ["ant_50_grade_16.pickle"],
-                    [],
-                    [],
-                    [],
-                    [],
-                    [],
-                    [],
-                ]
+    ["ant_11260_grade_1.pickle"],
+    [],
+]
 for data_path, bad_ant_list in zip(data_paths, bad_ant_lists):
     data_name = os.path.basename(data_path)
     output_folder = data_path.replace(data_name, f'all_logs_{data_name}')
@@ -80,7 +69,7 @@ for data_path, bad_ant_list in zip(data_paths, bad_ant_lists):
                       r'\Model\3D')
     # --- for export STLs
     file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
-                  'Env_FR4', 'Env_Vacuum']
+                  'Env_PEC', 'Env_FR4', 'Env_Vacuum']
 
     # file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
     #               'Env_FR4', 'Env_Vacuum']
