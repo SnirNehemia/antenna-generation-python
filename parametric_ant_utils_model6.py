@@ -122,7 +122,7 @@ def create_points_list(model_parameters,ant_parameters):
     #   3. ant_PEC - a list of lists - each describes a set of points of a specific antenna PEC leg.
     # all of these 'lines' have the save width in the simulation - ant_parameters['w']
 
-    
+
 def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
     return 0
     # plt.ioff()
