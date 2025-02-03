@@ -18,7 +18,7 @@ def rel2abs(ant_parameters, model_parameters):
     if model_parameters['type'] == 6:
         ant_parameters_abs['L1_rel'] = ant_parameters_abs['L1_rel'] * model_parameters['LG_y']
         ant_parameters_abs['L2_rel'] = ant_parameters_abs['L2_rel'] * (model_parameters['A_z'] - ant_parameters_abs['W2'])
-        ant_parameters_abs['L3_rel'] = ant_parameters_abs['L3_rel'] * (model_parameters['LG_y'] - ant_parameters_abs['W1']*3 - - ant_parameters_abs['gap'])
+        ant_parameters_abs['L3_rel'] = ant_parameters_abs['L3_rel'] * (model_parameters['LG_y'] - ant_parameters_abs['W1']*3 - ant_parameters_abs['gap'])
         ant_parameters_abs['L4_rel'] = ant_parameters_abs['L4_rel'] * ant_parameters_abs['L2_rel']
     if model_parameters['type'] == 5:
         ant_parameters_abs = ant_parameters.copy()
@@ -65,7 +65,7 @@ def abs2rel(ant_parameters_abs, model_parameters):
         ant_parameters_rel['L2_rel'] = ant_parameters_abs['L2_rel'] / (
                     model_parameters['A_z'] - ant_parameters_abs['W2'])
         ant_parameters_rel['L3_rel'] = ant_parameters_abs['L3_rel'] / (
-                    model_parameters['LG_y'] - ant_parameters_abs['W1'] * 3 - - ant_parameters_abs['gap'])
+                    model_parameters['LG_y'] - ant_parameters_abs['W1'] * 3 - ant_parameters_abs['gap'])
     return ant_parameters_rel
 
 def model_rel2abs(model_parameters):
@@ -88,6 +88,8 @@ def model_rel2abs(model_parameters):
         model_parameters_abs['b'] = model_parameters['b'] * model_parameters['height']
         model_parameters_abs['c'] = model_parameters['c'] * model_parameters['height']
         # model_parameters_abs['d'] = model_parameters['d'] * model_parameters['height']
+    if model_parameters['type'] == 6:
+        return model_parameters_abs
     return model_parameters_abs
 
 # def model_abs2rel(ant_parameters_abs, model_parameters):
