@@ -24,16 +24,16 @@ from datetime import datetime
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_better_parametric_model3'
-project_name = r'cst_project'
+simulation_name = 'CST_Model_better_parametric_model3_avi' # TODO: change to the name of your .cst file
+project_name = ''
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
-local_path = 'C:\\Users\\Public\\'
+local_path = r'G:\local_model_3_path\simplified' # TODO: change to the name of directory .cst file
 
 
 # ant_parameters_names = parametric_ant_utils.get_parameters_names()
-data_path = r"C:\Users\Public\cst_project\output_avi\optimized_antennas_GNN_model3_valset"
+data_path = r"G:\optmized_output_avi\optimized_antennas_GNN_swapped_valset3"
 data_name = os.path.basename(data_path)
 output_folder = data_path.replace(data_name, f'all_logs_{data_name}')
 os.makedirs(output_folder, exist_ok=True)
@@ -76,17 +76,6 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 cst_time = time.time()
 all_files = os.listdir(data_path)
 bad_ant_list = []
-# bad_ant_list = ['dipole_with_ground_ENV_SPEC_dipole_with_ground_ENV_phone_bars_1_grade_0',
-#                 'dipole_z_aligned_ENV_SPEC_dipole_z_aligned_ENV_130767_grade_0',
-#                 'dipole_z_aligned_ENV_SPEC_dipole_z_aligned_ENV_133229_grade_0',
-#                 'dipole_z_aligned_ENV_SPEC_dipole_z_aligned_ENV_194649_grade_0',
-#                 'dipole_z_aligned_ENV_SPEC_dipole_z_aligned_ENV_phone_reflector_2_grade_0']
-# bad_ant_list = ['SPEC_134549_ENV_134549_grade_0',
-#                 'SPEC_170775_ENV_170775_grade_0',
-#                 'SPEC_171321_ENV_171321_grade_0',
-#                 'SPEC_181196_ENV_181196_grade_0',
-#                 'SPEC_192239_ENV_192239_grade_0',
-#                 'SPEC_194327_ENV_194327_grade_0']
 #"ant_SPEC_dipole_z_aligned_ENV_133229_grade_2.pickle",
 #                 ' SPEC_dipole_z_aligned_ENV_193390_grade_0',
 #                 'SPEC_dipole_z_aligned_ENV_193390_grade_0',
@@ -194,8 +183,8 @@ for model_name in model_names:
         print('\n\n', exc_type, fname, exc_tb.tb_lineno, '\n\n')
         print('there was an error with the run!')
         project.close()
-        cst_instance = cst.interface.DesignEnvironment()
         project = cst.interface.DesignEnvironment.open_project(cst_instance, project_path)
+        results = cst.results.ProjectFile(project_path, allow_interactive=True)
         continue
 
     """ access results """

@@ -69,7 +69,7 @@ def check_ant_validity(ant_parameters,model_parameters):
     if (model_parameters['LG_y'] - ant_parameters['W1'] * 3 - ant_parameters['gap']) <= 0:
         return 0
     for [key,item] in ant_parameters.items():
-        if item <=0:
+        if item <= 0:
             return 0
     for iw in range(4):
         if ant_parameters[f'L{iw + 1:d}_rel'] > 1:
@@ -78,6 +78,64 @@ def check_ant_validity(ant_parameters,model_parameters):
     #     return 0
     return 1
 
+def create_bricks_list(model_parameters,ant_parameters):
+
+    ant_parameters['L1'] = ant_parameters['L1_rel'] * model_parameters['LG_y']
+    ant_parameters['L2'] = ant_parameters['L2_rel'] * (model_parameters['A_z'] - ant_parameters['W2'])
+    ant_parameters['L3'] = (ant_parameters['L3_rel'] *
+                            (model_parameters['LG_y'] - 3*ant_parameters['W2'] - ant_parameters['gap']))
+    ant_parameters['L4'] = ant_parameters['L4_rel'] * ant_parameters['L2']
+
+    feed_PEC_bricks = [
+        [[0, 0, 0], [0, ant_parameters['W1'], 10]],
+        [[-0.8, 0, 0], [-0.8,  ant_parameters['W1'], -10]]]
+
+    feed_brick = [[-0.8, 0, 0], [0, ant_parameters['W1'], 0]]
+
+    ant_PEC_bricks = [
+        [[0, 0, 0], [0, ant_parameters['W1'], model_parameters['A_z']]],
+        [[0, 0, model_parameters['A_z']], [-0.8, ant_parameters['W1'], model_parameters['A_z']]],
+        [[-0.8, 0, model_parameters['A_z']], [-0.8, ant_parameters['L1'], model_parameters['A_z']-ant_parameters['W1']]],
+        [[0, ant_parameters['W1']+ant_parameters['gap'], 0], # ant_parameters['W1']+ant_parameters['gap'] is the new y=0
+         [0, ant_parameters['W1']+ant_parameters['gap'] + ant_parameters['W1'],
+          ant_parameters['W2'] + ant_parameters['L2']]],
+        [[0, ant_parameters['W1']+ant_parameters['gap'] + ant_parameters['W1'], ant_parameters['L2']],
+         # ant_parameters['W1']+ant_parameters['gap'] is the new y=0
+         [0, ant_parameters['W1'] + ant_parameters['gap'] + ant_parameters['W1'] + ant_parameters['L3'],
+          ant_parameters['W2'] + ant_parameters['L2']]],
+        [[0, ant_parameters['W1'] + ant_parameters['gap'] + ant_parameters['W1'] + ant_parameters['L3'],
+          ant_parameters['W2'] + ant_parameters['L2']],
+         # ant_parameters['W1']+ant_parameters['gap'] is the new y=0
+         [0, ant_parameters['W1'] + ant_parameters['gap'] + 2 * ant_parameters['W1'] + ant_parameters['L3'],
+          ant_parameters['L2'] - ant_parameters['L4']]]
+
+    ]
+    # now we have 3 lists:
+    #   1. feed_brick - the brick describing the feed (not PEC)
+    #   2. feed_PEC_bricks - the bricks of the (not adjustable) feed PEC legs
+    #   3. ant_PEC_bricks - a list of lists - each describes a set of bricks of a specific antenna PEC leg.
+    # all of these 'lines' have the save width in the simulation - ant_parameters['w']
+
+    # each brick consists of a list (or list of lists):
+    # [[[x0,y0,z0],[x1,y1,z1]],...]]
+    # spans a brick bound by R0 and R1
+
+    # TODO: the translation of the axes should be:
+        # rotation of 180 degs around [1, 0, 0]
+        # shift of [-0.8, model_parameters['LG_y'], 0]
+
+    return [feed_brick, feed_PEC_bricks, ant_PEC_bricks]
+
+
+def create_ground_brick(model_parameters):
+    ground_brick = [[0, 0, 0], [0, model_parameters['LG_y'], -model_parameters['LG_z']]]
+    # it returns a single brick
+
+    # the translation of the axes should be:
+    #   rotation of 180 degs around [1, 0, 0]
+    #   shift of [-0.8, model_parameters['LG_y'], 0]
+
+    return ground_brick
 
 def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
     return 0
@@ -134,9 +192,10 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
 if __name__ == "__main__":
     import pickle
     import os
-    path = r'G:\local_model_5_path\simplified\output\models\90'
+    path = r'G:\local_model_6_path\simplified\output\models\0'
     ant_path = os.path.join(path, 'ant_parameters.pickle')
     model_path = os.path.join(path, 'model_parameters.pickle')
     ant_params = pickle.load(open(ant_path, 'rb'))
     model_params = pickle.load(open(model_path, 'rb'))
+    bricks_list = create_bricks_list(model_params, ant_params)
     print(check_ant_validity(ant_params, model_params))

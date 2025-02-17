@@ -40,13 +40,24 @@ project = cst.interface.DesignEnvironment.open_project(cst_instance, project_pat
 results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
 # ant_parameters_names = parametric_ant_utils.get_parameters_names()
-data_paths = [os.path.join(local_path,project_name,r'\output_moshe\generated_samples_separated_basic'),
-              os.path.join(local_path,project_name,r'\output_moshe\model_5\generated_samples_hyper')
+data_paths = [
+                os.path.join(local_path, project_name, 'output_moshe', 'generated_samples_sweep_testdata'),
+                os.path.join(local_path,project_name,'output_moshe', 'generated_sub_val_set_NN'),
+                os.path.join(local_path,project_name,'output_moshe', 'generated_sweep_testdata_NN'),
+                os.path.join(local_path,project_name,'output_moshe', 'generated_sub_val_set_NN_genetic'),
+                os.path.join(local_path,project_name,'output_moshe', 'generated_sweep_testdata_NN_genetic'),
+                os.path.join(local_path,project_name,'output_moshe', 'generated_sub_val_set_Shahar'),
+                os.path.join(local_path,project_name,'output_moshe', 'generated_sweep_testdata_Shahar'),
               ]
 bad_ant_lists = [
-    ["ant_11260_grade_1.pickle"],
-    [],
-]
+                    ["ant_50_grade_16.pickle"],
+                    [],
+                    [],
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
 for data_path, bad_ant_list in zip(data_paths, bad_ant_lists):
     data_name = os.path.basename(data_path)
     output_folder = data_path.replace(data_name, f'all_logs_{data_name}')

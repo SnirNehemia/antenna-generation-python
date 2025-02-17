@@ -16,7 +16,7 @@ from distutils.dir_util import copy_tree
 import shutil
 import pickle
 import time
-import parametric_ant_utils_randish_ant as parametric_ant_utils
+import parametric_ant_utils_randish_ant_model4 as parametric_ant_utils
 # import parametric_ant_utils
 from matplotlib import pyplot as plt
 from datetime import datetime
@@ -24,12 +24,12 @@ from datetime import datetime
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_parametric_model5_avi'
-project_name = r'cst_project'
+simulation_name = 'CST_Model_better_parametric_model5_avi'
+project_name = r'model_5'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
-local_path = 'C:\\Users\\Public\\'
+local_path = "C:\\Users\\User\\Documents\\"
 final_dir = local_path + project_name
 project_path = final_dir + "\\" + simulation_name + ".cst"
 """ open the CST project that we already created """
@@ -40,13 +40,8 @@ project = cst.interface.DesignEnvironment.open_project(cst_instance, project_pat
 results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
 # ant_parameters_names = parametric_ant_utils.get_parameters_names()
-data_paths = [r"C:\Users\Public\cst_project\output_moshe\model_5\generated_samples_separated_basic",
-              r"C:\Users\Public\cst_project\output_moshe\model_5\generated_samples_hyper",
-              ]
-bad_ant_lists = [
-    ["ant_11260_grade_1.pickle"],
-    [],
-]
+data_paths = ['C:\Users\User\Documents\model_5\optimized_antennas_model5']
+bad_ant_lists = []
 for data_path, bad_ant_list in zip(data_paths, bad_ant_lists):
     data_name = os.path.basename(data_path)
     output_folder = data_path.replace(data_name, f'all_logs_{data_name}')
