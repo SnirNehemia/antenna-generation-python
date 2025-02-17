@@ -24,23 +24,46 @@ from datetime import datetime
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-simulation_name = 'CST_Model_better_parametric_model3'
+simulation_name = 'CST_Model_better_parametric_model5_avi'
 project_name = r'cst_project'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
 local_path = 'C:\\Users\\Public\\'
+final_dir = local_path + project_name
+project_path = final_dir + "\\" + simulation_name + ".cst"
+""" open the CST project that we already created """
 
+cst_instance = cst.interface.DesignEnvironment()
+project = cst.interface.DesignEnvironment.open_project(cst_instance, project_path)
+
+results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
 # ant_parameters_names = parametric_ant_utils.get_parameters_names()
-data_path = r"C:\Users\Public\cst_project\output_avi\optimized_antennas_GNN_model3_valset"
+data_path = r'C:\Users\Public\cst_project\output_avi\optimized_antennas_model_5'
+bad_ant_list = ['10464_ENV_10464_grade_1',
+                '10823_ENV_10823_grade_0',
+                '10906_ENV_10906_grade_0',
+                 '11260_ENV_11260_grade_0',
+                 '11311_ENV_11311_grade_0',
+                 '1597_ENV_01597_grade_0',
+                 '3921_ENV_03921_grade_0',
+                 '704_ENV_00704_grade_2',
+                 '869_ENV_00869_grade_0',
+                '10823_ENV_10823_grade_2',
+                '10841_ENV_10841_grade_1',
+                '10923_ENV_10923_grade_2']
+
+
+
+
+#for data_path, bad_ant_list in zip(data_paths, bad_ant_lists):
 data_name = os.path.basename(data_path)
 output_folder = data_path.replace(data_name, f'all_logs_{data_name}')
 os.makedirs(output_folder, exist_ok=True)
 """ create all tree folder paths """
 # --- from here on I define the paths based on the manually defined project and local path ---
-final_dir = local_path + project_name
-project_path = final_dir + "\\" + simulation_name + ".cst"
+
 results_path = os.path.join(output_folder, "results")
 os.makedirs(results_path, exist_ok=True)
 
@@ -56,18 +79,12 @@ STEP_source_path = (final_dir+"\\" + simulation_name +
                   r'\Model\3D')
 # --- for export STLs
 file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
-              'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
+              'Env_PEC', 'Env_FR4', 'Env_Vacuum']
 
 # file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
 #               'Env_FR4', 'Env_Vacuum']
 
 
-""" open the CST project that we already created """
-
-cst_instance = cst.interface.DesignEnvironment()
-project = cst.interface.DesignEnvironment.open_project(cst_instance, project_path)
-
-results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
 """ run the simulations """
 
@@ -75,28 +92,9 @@ results = cst.results.ProjectFile(project_path, allow_interactive=True)
 
 cst_time = time.time()
 all_files = os.listdir(data_path)
-bad_ant_list = []
-# bad_ant_list = ['dipole_with_ground_ENV_SPEC_dipole_with_ground_ENV_phone_bars_1_grade_0',
-#                 'dipole_z_aligned_ENV_SPEC_dipole_z_aligned_ENV_130767_grade_0',
-#                 'dipole_z_aligned_ENV_SPEC_dipole_z_aligned_ENV_133229_grade_0',
-#                 'dipole_z_aligned_ENV_SPEC_dipole_z_aligned_ENV_194649_grade_0',
-#                 'dipole_z_aligned_ENV_SPEC_dipole_z_aligned_ENV_phone_reflector_2_grade_0']
-# bad_ant_list = ['SPEC_134549_ENV_134549_grade_0',
-#                 'SPEC_170775_ENV_170775_grade_0',
-#                 'SPEC_171321_ENV_171321_grade_0',
-#                 'SPEC_181196_ENV_181196_grade_0',
-#                 'SPEC_192239_ENV_192239_grade_0',
-#                 'SPEC_194327_ENV_194327_grade_0']
-#"ant_SPEC_dipole_z_aligned_ENV_133229_grade_2.pickle",
-#                 ' SPEC_dipole_z_aligned_ENV_193390_grade_0',
-#                 'SPEC_dipole_z_aligned_ENV_193390_grade_0',
-#                 'SPEC_dipole_z_aligned_ENV_phone_1_grade_0',
-#                 'SPEC_dipole_z_aligned_ENV_phone_4_grade_0',
-#                 '131874_ENV_131874_grade_0',
-#                 'SPEC_dual_dipole_with_ground_ENV_141178_grade_0',
-#                 'SPEC_dipole_with_ground_45_degs_ENV_phone_3_grade_0', 'SPEC_dipole_z_aligned_ENV_130767_grade_0', 'SPEC_dipole_z_aligned_ENV_133229_grade_0']
+#bad_ant_list = ['ant_00521_grade_0.pickle', "ant_02168_grade_0.pickle"]
 model_names = [name for name in all_files if 'ENV' in name]
-print(f'found {len(model_names)} models')
+print(f'found {len(model_names)} envs')
 processed_examples = os.listdir(results_path)
 for model_name in model_names:
     name_without_ant = model_name.replace("ant_", "").split('.')[0]
@@ -109,17 +107,7 @@ for model_name in model_names:
         example_parameters = pickle.load(file)
     model_parameters = example_parameters['env_parameters']
     ant_parameters = example_parameters['ant_parameters']
-
-
-
     pattern = model_name.replace("ENV_", "").replace(".pickle", "")
-    #ant_names = [name for name in all_files if 'ant_'+pattern in name]
-    # #ant_names = [name for name in ant_names if 'grade_0' in name]
-    # print(f'found {len(ant_names)} antennas for that env')
-    # for ant_name in ant_names:
-    # if ant_name in bad_ant_list:
-    #     print(f'{ant_name} is bad')
-    #     continue
     ant_ID = model_name.replace("ant_", "").replace(".pickle", "")
     # ant_path = os.path.join(data_path, ant_name)
     # if any([ant_ID in file for file in os.listdir(results_path)]):
@@ -132,13 +120,7 @@ for model_name in model_names:
      do it as you got them - as a dictionary!
      add a parameter ant_ID to save it to a different file (so your results won't overwrite each other)"""
 
-    # file = open(model_path, 'rb')
-    # model_parameters = pickle.load(file)
-    # file.close()
-    #
-    # file = open(ant_path, 'rb')
-    # ant_parameters = pickle.load(file)
-    # file.close()
+
     if not parametric_ant_utils.check_ant_validity(ant_parameters=ant_parameters, model_parameters=model_parameters):
         print(f'MODEL: {ant_ID} NOT VALID, CONTINUE TO NEXT SAMPLE!')
         continue
@@ -313,7 +295,5 @@ for model_name in model_names:
     print('saved results. ')
     # print(f'\t RUNTIME for #{ant_ID:.0f}:\n\t\t ant #{ant_ID:.0f} time: {(time.time()-cst_time)/60:.1f} min \n\t\t overall time: {(time.time()-overall_sim_time)/60/60:.2f} hours')
     # print(f'\t\t average time: {(time.time() - overall_sim_time) / ants_count/60: .1f} min')
-
-
-
-print(' --------------------------------- \n \t\t\t FINISHED THE RUN \n ---------------------------------')
+    print(f' --------------------------------- \n \t\t\t FINISHED THE RUN FOR {data_path} \n ---------------------------------')
+print('DONE')
