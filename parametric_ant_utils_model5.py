@@ -150,9 +150,9 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
 #     return 1
 
 def check_ant_validity(ant_parameters,model_parameters):
-    Sz = (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 - ant_parameters['w'] / 2
+    Sz = (model_parameters['Sz'] - ant_parameters['w'] / 2
           - model_parameters['feed_length'] / 2)
-    Sy = model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] - ant_parameters['w']
+    Sy = model_parameters['Sy'] - ant_parameters['w']
     wings = ['w1','w2','q1','q2']
     for wing in wings:
         if (ant_parameters[f'{wing}z3'] > ant_parameters[f'{wing}z1'] > ant_parameters[f'{wing}z2'] and

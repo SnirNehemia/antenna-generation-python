@@ -87,7 +87,7 @@ def create_bricks_list(model_parameters,ant_parameters):
     ant_parameters['L4'] = ant_parameters['L4_rel'] * ant_parameters['L2']
 
     feed_PEC_bricks = [
-        [[0, 0, 0], [0, ant_parameters['W1'], 10]]
+        [[0, 0, 0], [0, ant_parameters['W1'], 10]],
         [[-0.8, 0, 0], [-0.8,  ant_parameters['W1'], -10]]]
 
     feed_brick = [[-0.8, 0, 0], [0, ant_parameters['W1'], 0]]
@@ -116,7 +116,7 @@ def create_bricks_list(model_parameters,ant_parameters):
     #   3. ant_PEC - a list of lists - each describes a set of points of a specific antenna PEC leg.
     # all of these 'lines' have the save width in the simulation - ant_parameters['w']
 
-    # the translation of the axes should be:
+    # TODO: the translation of the axes should be:
         # rotation of 180 degs around [1, 0, 0]
         # shift of [-0.8, model_parameters['LG_y'], 0]
 
@@ -179,9 +179,10 @@ def save_figure(model_parameters,ant_parameters, output_path, run_ID, alpha=1):
 if __name__ == "__main__":
     import pickle
     import os
-    path = r'G:\local_model_5_path\simplified\output\models\90'
+    path = r'G:\local_model_6_path\simplified\output\models\0'
     ant_path = os.path.join(path, 'ant_parameters.pickle')
     model_path = os.path.join(path, 'model_parameters.pickle')
     ant_params = pickle.load(open(ant_path, 'rb'))
     model_params = pickle.load(open(model_path, 'rb'))
+    bricks_list = create_bricks_list(model_params, ant_params)
     print(check_ant_validity(ant_params, model_params))

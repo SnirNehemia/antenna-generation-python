@@ -33,7 +33,7 @@ local_path = r'G:\local_model_3_path\simplified' # TODO: change to the name of d
 
 
 # ant_parameters_names = parametric_ant_utils.get_parameters_names()
-data_path = r"G:\optmized_output_avi\optimized_antennas_GNN_swapped_antenna_mode3_test"
+data_path = r"G:\optmized_output_avi\optimized_antennas_GNN_swapped_valset3"
 data_name = os.path.basename(data_path)
 output_folder = data_path.replace(data_name, f'all_logs_{data_name}')
 os.makedirs(output_folder, exist_ok=True)

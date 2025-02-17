@@ -114,7 +114,7 @@ if __name__ == "__main__":
     mesh = trimesh.Trimesh(vertices=data.pos, faces=data.faces)
 
     # input where you want to save the mesh:
-    path_to_save_mesh = r"C:\Users\snirn\OneDrive - Tel-Aviv University\Snir - FemtoNano Group's files\AI RF design\test"
+    path_to_save_mesh = r"G:\Pixels\Test"
     mesh.export(path_to_save_mesh +'random_mesh.stl')
     # load the saved mesh and display it
     loaded_trimesh = trimesh.load(path_to_save_mesh +'random_mesh.stl')
