@@ -79,8 +79,7 @@ check_env_validity = 0
 
 model_parameters = {
     'type':6,
-    'plane':'yz-flipped',#changetoyz-flipped
-    #parametersthatchangeboththeantennaandtheenviroment
+    'plane':'yz-flipped',
     'LG_z':10,
     'LG_y': 50,
     'A_z':1
