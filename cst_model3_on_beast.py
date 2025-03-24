@@ -16,91 +16,82 @@ from distutils.dir_util import copy_tree
 import shutil
 import pickle
 import time
-import parametric_ant_utils_model5_0 as parametric_ant_utils
+import parametric_ant_utils_model_3_0 as parametric_ant_utils
 from matplotlib import pyplot as plt
 from datetime import datetime
 
 """ define run parameters """
 # --- define local path and project name
 # project_name = r'Model3Again'
-# simulation_name = 'CST_Model_better_parametric_model5'
-simulation_name = 'CST_Model5'
-project_name = r'model_5'
+simulation_name = 'CST_Model3'
+project_name = r'CST_project'
 # local_path = "C:\\Users\\shg\\Documents\\CST_projects\\"
 # local_path = 'C:\\Users\\Public\\'
 # local_path = 'C:\\Users\\Snir\\OneDrive - Tel-Aviv University\\Documents\\local_model_3_path\\'
-local_path = "C:\\Users\\User\\Documents\\"
+local_path = 'C:\\Users\\User\\Documents\\'
 # --- the following lines is relevant when we have a path to pre-defined geometries (in DXF format)
 create_new_models = 1  # 1 for creating new models, 0 to use existing ones
 original_models_path = r'D:\model_3_data\output'  # path to existing models output folder
 # --- choose whether to use fix or changed environment
 change_env = 1
-check_env_validity = 0
-
-# model_parameters = {
-#     'type':3,
-#     'plane':'yz-flipped',#changetoyz-flipped
-#     #parametersthatchangeboththeantennaandtheenviroment
-#     'width':10,#coordinatealongthex(red)axis
-#     'height': 50,
-#     'length':60,#coordinatealongthev(green)axis
-#     'thickness':1,
-#     'adx':0.9,
-#     'arx':0.9,
-#     'ady': 0.9,
-#     'ary': 0.85,
-#     'adz':0.9,
-#     'arz':0.9,
-#     'a':0.6,
-#     'b':0.8,
-#     'c':0.8,
-#     'bdx':1,
-#     'brx':0.2,
-#     'bdy':0.8,
-#     'bry':0.75,
-#     'bdz':0.8,
-#     'brz':0.75,
-#     'cdx':1,
-#     'crx':0.3,
-#     'cdy':0.8,
-#     'cry':0.75,
-#     'cdz':0.8,
-#     'crz':0.75,
-#     'ddx':1,
-#     'drx':1,
-#     'ddy':0.8,
-#     'dry':0.75,
-#     'ddz':1,
-#     'drz':1,
-#     'feed_length':2
-# }
 
 model_parameters = {
-    'type':5,
+    'type':3,
     'plane':'yz-flipped',#changetoyz-flipped
     #parametersthatchangeboththeantennaandtheenviroment
-    'Sz':10,#coordinatealongthex(red)axis
-    'Sy': 50,
-    'w':1,#coordinatealongthev(green)axis
+    'width':10,#coordinatealongthex(red)axis
+    'height': 50,
+    'length':60,#coordinatealongthev(green)axis
     'thickness':1,
-    'feed_length':2,
-    'Ly':1,
-    'Lz':1
+    'adx':0.9,
+    'arx':0.9,
+    'ady': 0.9,
+    'ary': 0.85,
+    'adz':0.9,
+    'arz':0.9,
+    'a':0.6,
+    'b':0.8,
+    'c':0.8,
+    'bdx':1,
+    'brx':0.2,
+    'bdy':0.8,
+    'bry':0.75,
+    'bdz':0.8,
+    'brz':0.75,
+    'cdx':1,
+    'crx':0.3,
+    'cdy':0.8,
+    'cry':0.75,
+    'cdz':0.8,
+    'crz':0.75,
+    'ddx':1,
+    'drx':1,
+    'ddy':0.8,
+    'dry':0.75,
+    'ddz':1,
+    'drz':1,
+    'feed_length':2
 }
 
 ## --- define the model parameters limits for randomization:
 model_parameters_limits = model_parameters.copy()
-# for key, value in model_parameters_limits.items():
-#     if type(value) != str and key != 'type':
-#         if model_parameters_limits[key]<=1:
-#             model_parameters_limits[key] = [0, 1]
+for key, value in model_parameters_limits.items():
+    if type(value) != str and key != 'type':
+        if model_parameters_limits[key]<=1:
+            model_parameters_limits[key] = [0, 1]
 # EXAMPLE for a costum parameter
 # model_parameters_limits['adx'] = [0.2,0.8]
-model_parameters_limits['Sz'] = [20,50]
-model_parameters_limits['Sy'] = [20,50]
-model_parameters_limits['Lz'] = [0, 1]
-model_parameters_limits['Ly'] = [0,1]
-model_parameters_limits['w'] = [1,2]
+model_parameters_limits['length'] = [40,200]
+model_parameters_limits['width'] = [10,100]
+model_parameters_limits['height'] = [40, 200]
+model_parameters_limits['a'] = [0.1, 0.9]
+model_parameters_limits['b'] = [0.1, 0.9]
+model_parameters_limits['c'] = [0.1, 0.9]
+# model_parameters_limits['ady'] = [0.2, 1]
+# model_parameters_limits['ary'] = [0.2, 1]
+# model_parameters_limits['adz'] = [0.2, 1]
+# model_parameters_limits['arz'] = [0.2, 1]
+model_parameters_limits['thickness'] = 1
 
 ant_parameters_names = parametric_ant_utils.get_parameters_names()
 
@@ -119,7 +110,7 @@ STEP_source_path = (final_dir+"\\" + simulation_name +
                   r'\Model\3D')
 # --- for export STLs
 file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
-              'Env_PEC', 'Env_FR4', 'Env_Vacuum']
+              'Env_PEC', 'Env_FR4', 'Env_Polycarbonate', 'Env_Vacuum']
 
 # file_names = ['Antenna_PEC', 'Antenna_Feed', 'Antenna_Feed_PEC',
 #               'Env_FR4', 'Env_Vacuum']
@@ -139,7 +130,7 @@ overall_sim_time = time.time()
 ants_count = 0
 starting_index = 0
 antenna_amount = 10000
-for run_ID_local in range(0, antenna_amount): #15001-starting_index-1 % 15067 is problematic!
+for run_ID_local in range(0, antenna_amount):
     run_ID = starting_index + run_ID_local
     if os.path.isfile(save_S11_pic_dir + r'\S_parameters_' + str(
             run_ID) + '.png'):  # os.path.isdir(models_path + '\\' + str(run_ID)):
@@ -180,8 +171,8 @@ for run_ID_local in range(0, antenna_amount): #15001-starting_index-1 % 15067 is
                         model_parameters[key] = np.round(np.random.uniform(value[0],value[1]),1)
                         # update the changed variables in environment and save the current run as previous
                         model_parameters[key] = np.max([model_parameters[key], 0.1])
-                if (model_parameters['Sz'] / 2 > 20 and
-                    model_parameters['Sy'] >30):
+                if (model_parameters['length'] * model_parameters['adz'] * model_parameters['arz'] / 2 > 20 and
+                    model_parameters['height'] * model_parameters['ady'] * model_parameters['ary'] >20):
                     valid_env = 1
             # update model
             for key, value in model_parameters.items():

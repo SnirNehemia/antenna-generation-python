@@ -38,12 +38,36 @@ several important issues we have to pay our attention to:
     The way I chose to treat this trade-off is to add many DOF to the model and apply 
   some logic conditions on the data generation procedure.
 
-## Preperations
+## Quick start guide
+
+The essential for the first run is:
+* Prepare the directory as described in the Preparation section
+* Choose a model to run (choose from model 3, 5, 6).
+* Open the corresponding  python file (```cst_model6_on_beast.py``` for example)
+* Modify the line ```sys.path.append(r"C:\Program Files (x86)\CST Studio Suite 
+2024\AMD64\python_cst_libraries")``` to point at your cst library folder (it comes 
+  with the CST installation).
+* If you run with your own model:
+  * Build your own parametric model in CST as described in the rest of this file.
+  * Modify the dictionary ```model_parameters``` to the parameters of your model. 
+    ```'type'``` and ```'plane'``` are our own classification flags, you may omit them 
+    if you want.
+  * Set desired limits in ```model_parameters_limits```
+  * In the corresponding ```parametric_ant_utils``` (or your in your own module), 
+    modify the ```get_parameters_names()```,
+  ```randomize_ant(parameters_names,model_parameters,seed=0)``` and 
+  ```check_ant_validity(ant_parameters, model_parameters)``` to fit your model.
+* Change ```simulation_name``` and ```project_name``` to point at the actual 
+  directories of your project as depicted in the Preparation section.
+* Run!
+
+## Preparations
 
 * __file tree__:
 
     the file tree for any project should look something like that:
     ```
+  local_path
     |--PROJECT_NAME
   |  |--CST_FILE.cst
   |  |--output
@@ -166,9 +190,9 @@ for filename in os.listdir(STEP_source_path):
 
 The models' name sometimes have wierd names for a complete and bug-free:
 ```
-At Moshe's paper - model 1 (= model_3) = 'CST_Model_better_parametric.cst'
+At Moshe's paper - model 1 (= model_3) = 'CST_Model3.cst'
 
-At Moshe's paper - model 2 (= model_5) = 'CST_Model_better_parametric_model5.cst'
+At Moshe's paper - model 2 (= model_5) = 'CST_Model5.cst'
 
 At Moshe's paper - model 3 (= model_6) = 'CST_Model6.cst'
 ```
