@@ -60,7 +60,7 @@ def randomize_ant(parameters_names,model_parameters,seed=0):
         np.random.seed(seed)
     valid_ant = 0
     count_retries = 0
-    ant_parameters['fx'] = min([abs(np.round(np.random.normal(scale=0.5), decimals=1)),1])
+    ant_parameters['fx'] = min([abs(np.round(np.random.normal(loc=0.5, scale=0.5), decimals=1)),1])
     Sz = (model_parameters['Sz'] - model_parameters['feed_length'] / 2)
     Sy = model_parameters['Sy']
     wing_names = ['w','q']
